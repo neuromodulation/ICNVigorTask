@@ -91,7 +91,7 @@ blocks = 3:14;
 block_sets = [3:8;9:14];
     
 % Get a list of all datasets 
-filenames = dir(fullfile('..\Data/Parkinson\',"*.mat"));
+filenames = dir(fullfile('..\..\Data\Parkinson\',"*.mat"));
 n_files = length(filenames);
 conditions = ["Slow","Fast"];
 peaks_all_files = [];
@@ -99,7 +99,7 @@ peaks_mean_all_files = [];
 for i_file=1:n_files
     
     % Load the data
-    load(strcat('..\Data\Parkinson\',filenames(i_file).name));
+    load(strcat('..\..\Data\Parkinson\',filenames(i_file).name));
     data = struct.data; 
     options = struct.options; 
     if ~any(fieldnames(options) == "slow_first")

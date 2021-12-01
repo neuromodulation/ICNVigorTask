@@ -85,6 +85,7 @@ if use_tmsi
     tmsi_sampler = device.createSampler();
     tmsi_sampler.connect();
     tmsi_sampler.start();
+    sample_length_tmsi = []; % Array saving the number of extracted sample in each matlab iteration
 end
 
 %% Initialize Psychtoolbox
@@ -92,7 +93,7 @@ Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 screens = Screen('Screens');
 screenNumber = max(screens); % Get the number of the external screen if there is one attached
-window_dim = [];%[100 100 1800 900]; % Define the dimension of the psychtoolbox window
+window_dim = [100 100 1800 900]; % Define the dimension of the psychtoolbox window
 [window, windowRect] = Screen('OpenWindow', screenNumber, [0 0 0], window_dim);  % Open a black window
 [screenXpixels, screenYpixels] = Screen('WindowSize', window); % Get the dimension of the window in pixels
 [xCenter, yCenter] = RectCenter(windowRect); % Get the center coordinates of the window
@@ -331,7 +332,8 @@ for i_block=1:n_blocks
           
             % Save the neurophysiological data from tmsi 
             if use_tmsi
-                data_tmsi = cat(1,data_tmsi,samples_tmsi)
+                data_tmsi = cat(2,data_tmsi,samples_tmsi)
+                sample_length_tmsi = cat(1, sample_length_tmis, size(data_tmsi, 2));
             end
             
             % Set the time of the start of the movement
@@ -354,7 +356,7 @@ for i_block=1:n_blocks
                 
                 % Get the peak velocity and append it to the array storing
                 % all peaks in one set of blocks (without break)
-                peak = max(data(end-i_sample:end,4));
+                peak = max(data(end-i_sample+1:end,4));
                 peaks = cat(1, peaks, peak);
                 
                 % Trigger the stimulation if.. 
@@ -420,5 +422,27 @@ if ~test
     
     % Save the neurophsyiological data
     if use_tmsi
+        % Attach the behavioral data to the neurophysiological data for
+        % easier analysis
+        % Repeat the behavioral data to match the sampling rate or the
+        % neuro data 
+        data_upsample = repelem(data, sample_length_tmsi, 1);
+        data_tmsi = cat(1,data_tmsi,data_upsample);
+        file_name = strcat("sub-",string(n_par),"-",med,"-task-VigorStim-",hand,...
+                            "-", conditions(cond+1),"-StimOn","-run-0",string(run),...
+                            "-neuro.mat");
+        save(strcat(pwd,'/Data/Parkinson/',file_name), "data_tmsi");
+    end
+end
+
+%% Test
+plot(data(:,4));
+hold on; 
+stim = find(data(:,11));
+for i=2:length(stim)
+    if diff(stim(i-1:i)) > 50
+        disp(2);
+        xline(stim(i), "red");
+        hold on;
     end
 end
