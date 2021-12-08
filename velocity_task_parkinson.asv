@@ -355,10 +355,11 @@ for i_block=1:n_blocks
                 % Set the time of the start of the movement
                 % Start of movement when a distance threshold from the last
                 % target is passed
-                if abs(x_mouse - target_pos_x_old) > thres_move_start_x
+                if abs(x_mouse - abs(screenXpixels-target_pos_x)) > thres_move_start_x
                     move_start_time = toc(time);
                     move_started = true;
                 end
+            
             end
   
             %% Stimulation
@@ -409,7 +410,6 @@ for i_block=1:n_blocks
                 first_sample_after_threshold = false;
             end
         end
-        target_pos_x_old = target_pos_x; % Save last target position
         Screen('FillRect',window,black);
         Screen('Flip', window);
     end
