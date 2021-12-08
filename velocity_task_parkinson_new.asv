@@ -106,15 +106,15 @@ if test % For the test only perform 15 trials
     n_trials = 15; % Number of trials in each (experimental) block
     n_blocks = 1 ; % Total number of blocks
 else
-     n_trials = 33;
-    n_blocks = 12 ;
+    n_trials = [97,96,97,96]; % Number of trials, after a break an extra trial is needed
+    n_blocks = 4 ;
 end
-stim_blocks = [1:3 7:9]; % Blocks during which stimulation is applied
-break_blocks = [1 7]; % Blocks befor which a break is introduced
+stim_blocks = [1 3]; % Blocks during which stimulation is applied
+break_blocks = stim_blocks; % Blocks before which there is break, same as stimulation
 data = []; % Matrix that will contain all behavioral data aquired during the experiment
 data_tmsi = []; % Matrix that will contain all neurophysiological data aquired during the experiment
 time = tic; % Timer from the beginning of the experiment
-threshold_vel_move_start = 2000; % pixel/sec
+thres_move_start_x = 200; % pixel/sec 
 threshold_vel_change = 1000; % Maximum allowed change of velocity between trials
 
 % Define target properties
@@ -148,11 +148,8 @@ purple = [200 0 200];
 background_col_default = black;
 background_col_change = [100 100 100];
 
-% Load y target positions (same for each participant)
-% Makes sure that every movement occurs once in each block (16 possible
-% movements between 4 different positions on the y axis)
-load('target_pos_y_ind.mat');
-traget_pos_y_ind = target_pos_y_ind;
+% Load pseudo randomized y target positions (same for each participant)
+load('target_pos_y_ind_new.mat');
 
 % Other variables
 escapeKey = KbName('ESCAPE');
@@ -226,10 +223,15 @@ for i_block=1:n_blocks
         % that stores the peak values (used for classification of
         % slow/fast)
         peaks = [];
+        
+        % Inititalize counter for the target positions 
+        i_count_pos = 0;
+        i_block_break = find(i_block==break_blocks);
     end
     
     %% Start a block of n_trials
-    for i_trial=1:n_trials
+    n_trials_block = n_trials(i_block);
+    for i_trial=1:n_trials_block
         
         % At the start of each trial...
         side = side * -1; % Change the side the target is displayed
@@ -238,9 +240,10 @@ for i_block=1:n_blocks
         % Set the colors back to default
         target_col = target_col_default;
         background_col = background_col_default;
+        i_count_pos = i_count_pos + 1;
         
         % Get the position of the target and define it
-        target_pos_y = yCenter + target_pos_y_all(target_pos_y_ind(i_block, i_trial));
+        target_pos_y = yCenter + target_pos_y_all(target_pos_y_ind(i_count_pos, i_block_break));
         target_pos_x = xCenter + side * target_pos_x_from_center;
         target = CenterRectOnPointd(target_size, target_pos_x, target_pos_y);
         
@@ -308,36 +311,51 @@ for i_block=1:n_blocks
             end
             
             %% Compute velocity and save the data
+            % Only after the first trial after a break as the first trial
+            % is not complete
+            
+            if ~(ismember(i_block, break_blocks) && i_trial == 1)
                 
-            % For the first sample save only the positions
-            if i_sample == 1 
-                x_vel=0;y_vel=0;vel=0;mean_vel=0;
-            end
+                % For the first sample save only the positions
+                if i_sample == 1 
+                    x_vel=0;y_vel=0;vel=0;mean_vel=0;
+                end
 
-            % If at least 2 samples are taken compute the velocity
-            if i_sample >= 2 
-                passed_time = sample_time - data(end, 3); % Compute the time passed between the samples
-                x_vel = abs(x_mouse - data(end,1)) / passed_time;
-                y_vel = abs(y_mouse - data(end,2)) / passed_time;
-                vel = sqrt(x_vel.^2 + y_vel.^2); % Velocity independent of direction
-                mean_vel = 0;
-            end
-            % If at least 7 samples are taken compute the average velocity
-            if i_sample >= 7
-                mean_vel = mean([vel; data(end-5:end,5)], [1, 2]);
-            end
-            % Save the behavioral data 
-            data = cat(1,data,[x_mouse y_mouse sample_time mean_vel vel x_vel y_vel...
-                          i_block i_trial on_target stim target_pos_x target_pos_y global_time]);
-          
-            % Save the neurophysiological data from tmsi 
-            if use_tmsi
-                data_tmsi = cat(2,data_tmsi,samples_tmsi)
-                sample_length_tmsi = cat(1, sample_length_tmis, size(data_tmsi, 2));
+                % If at least 2 samples are taken compute the velocity
+                if i_sample >= 2 
+                    passed_time = sample_time - data(end, 3); % Compute the time passed between the samples
+                    x_vel = abs(x_mouse - data(end,1)) / passed_time;
+                    y_vel = abs(y_mouse - data(end,2)) / passed_time;
+                    vel = sqrt(x_vel.^2 + y_vel.^2); % Velocity independent of direction
+                    mean_vel = 0;
+                end
+                
+                % If at least 7 samples are taken compute the average velocity
+                if i_sample >= 7
+                    mean_vel = mean([vel; data(end-5:end,5)], [1, 2]);
+                end
+            
+                % Save the behavioral data 
+                if ismember(i_block, break_blocks) && i_trial > 1
+                    i_trial_save = i_trial - 1;
+                else
+                    i_trial_save = i_trial;
+                end
+                
+                % Append the data
+                data = cat(1,data,[x_mouse y_mouse sample_time mean_vel vel x_vel y_vel...
+                                i_block i_trial_save on_target stim target_pos_x target_pos_y global_time]);
+
+                % Save the neurophysiological data from tmsi 
+                if use_tmsi
+                    data_tmsi = cat(2,data_tmsi,samples_tmsi)
+                    sample_length_tmsi = cat(1, sample_length_tmis, size(data_tmsi, 2));
+                end
             end
             
             % Set the time of the start of the movement
-            if mean_vel > threshold_vel_move_start && ~move_started
+            % Start of movement when a threshold on the x-axis is crossed
+            if x_mouse > target_w_h + thres_move_start_x && x_mouse < screenXpixels - (target_w_h + thres_move_start_x) 
                 move_start_time = toc(time);
                 move_started = true;
             end
@@ -345,14 +363,15 @@ for i_block=1:n_blocks
             %% Stimulation
             % Get the peak of the movement in order to trigger stimulation
             % if...
+            % it is not the first trial of a block after a break
             % the trial is during a stimulation block or the test
             % the move has started
             % the mean velocity decreased during the last 4 samples --> the
             % peak is passed
             % it is the first time for each movement these conditions are
             % met --> trigger stimulation only once per movement
-            if (ismember(i_block, stim_blocks) || test) && move_started && first_sample_after_threshold ...
-                && all(diff(data(end-3:end,4)) < 0)
+            if ~(i_trial == 1 && ismember(i_block, break_blocks)) && (ismember(i_block, stim_blocks) || test) && move_started ...
+                && first_sample_after_threshold && all(diff(data(end-3:end,4)) < 0)
                 
                 % Get the peak velocity and append it to the array storing
                 % all peaks in one set of blocks (without break)
@@ -439,8 +458,10 @@ end
 plot(data(:,4));
 hold on; 
 stim = find(data(:,11));
-for i=1:length(stim)
-    if stim(i
-    xline(stim(i), "red");
-    hold on;
+for i=2:length(stim)
+    if diff(stim(i-1:i)) > 50
+        disp(2);
+        xline(stim(i), "red");
+        hold on;
+    end
 end

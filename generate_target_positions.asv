@@ -45,11 +45,11 @@ i_start = [1,7];
 target_pos_y_ind = [];
 for j=1:2
     target_pos_block = [];
-    for i=i_start(j):i_start(j)+5
+    for i=i_start(j):i_start(j)+6
         % Get the unique target position (from 1-4)
         tmp = target_order{1, i};
         tmp(tmp==10)=1;  tmp(tmp==20)=2;  tmp(tmp==30)=3;  tmp(tmp==40)=4; 
-        if ismember(i,i_start)
+        if ismember(==1
             tmp = [tmp(1,1); tmp(:,2)];
         else
            tmp =  tmp(:,2);
@@ -58,6 +58,8 @@ for j=1:2
     end
     target_pos_y_ind = cat(2,target_pos_y_ind,target_pos_block);
 end
-% Save the generated target position
-save(strcat(pwd,"/target_pos_y_ind_new.mat"), "target_pos_y_ind");
+%save(strcat(pwd,"/target_pos_y_ind.mat"), "target_pos_y_ind");
+%%
+
+load_tmsi();
 
