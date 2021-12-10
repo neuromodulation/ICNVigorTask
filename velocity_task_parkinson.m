@@ -115,7 +115,6 @@ data = []; % Matrix that will contain all behavioral data aquired during the exp
 data_tmsi = []; % Matrix that will contain all neurophysiological data aquired during the experiment
 time = tic; % Timer from the beginning of the experiment
 thres_move_start_x = 300; % pixel/sec Distance from target that has to be passed for the movement to start
-threshold_vel_change = 1000; % Maximum allowed change of velocity between trials
 
 % Define target properties
 target_w_h = 350; % Width = Height of target rectangle
@@ -383,7 +382,7 @@ for i_block=1:n_blocks
                 % already 3 movements were performed
                 % none of the last 3 movements was an outlier (change
                 % between velocities below threshold)
-                if length(peaks) > 3 &&  all(abs(diff(data(end-2:end,4))) < threshold_vel_change)
+                if length(peaks) > 3
                     peak_diff = peaks(end) - peaks(end-2:end-1);
                     
                     % Trigger the stimulation if..
@@ -453,17 +452,5 @@ if ~test
                             "-", conditions(cond+1),"-StimOn","-run-0",string(run),...
                             "-neuro.mat");
         save(strcat(pwd,'/Data/Parkinson/',file_name), "data_tmsi");
-    end
-end
-
-%% Test
-plot(data(:,4));
-hold on; 
-stim = find(data(:,11));
-for i=2:length(stim)
-    if diff(stim(i-1:i)) > 50
-        disp(2);
-        xline(stim(i), "red");
-        hold on;
     end
 end

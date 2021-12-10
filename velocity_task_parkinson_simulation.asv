@@ -30,7 +30,22 @@ for i_file=1:n_files
             for i=4:length(data_trial)
                 data_vel_av(i) = mean(data_trial(i-3:i,5));
             end
-                        
+            
+%             figure; 
+%             plot(data_trial(:,[1 4 5]), "LineWidth", 2); 
+%             hold on; 
+%             plot(data_vel_av,"LineWidth", 2);
+%             hold on;
+%             [y,x] = max(data_vel_av);
+%             plot(x,y,".",'MarkerSize',25);
+%             hold on;
+%             [y,x] = max(data_trial(:,4));
+%             plot(x,y,".",'MarkerSize',25);
+%             hold on;
+%             [y,x] = max(data_trial(:,5));
+%             plot(x,y,".",'MarkerSize',25);
+%             legend(["x mouse","mean vel", "vel", "new mean vel"]);
+            
             % Find the index of the target
             ind_target = find(data_trial(:,10)==1,1);
             
@@ -48,13 +63,14 @@ for i_file=1:n_files
             % Get the peak before the index after the peak
             [peak_after,~] = max(data_vel_av(1:ind_after_peak));
             if peak < 20000
-                peaks = cat(1,peaks,peak_after);
+                peaks = cat(1,peaks,peak);
             end
             
             % Save the distances in seconds 
             try
                 diff_after_target = cat(1, diff_after_target,data_trial(ind_target,3) - data_trial(ind_after_peak,3));
                 diff_peak_after = cat(1, diff_peak_after,data_trial(ind_after_peak,3) - data_trial(ind_peak,3));
+                diff_peak_after_peak = cat(1, diff_peak_after_peak,data_trial(ind_after_peak,3) - data_trial(ind_peak,3));
             end
             
             % Decide whether the movement would be slow or fast
@@ -67,17 +83,27 @@ for i_file=1:n_files
             end
         end
     end
-    figure;
+%     figure;
+%     plot(abs(diff(peaks))); hold on;
+%     yline(prctile(abs(diff(peaks)),99));
     % Analyse the results
+    figure;
     subplot(3,1,1);
-    histogram(diff_after_target-0.3,30);
+    diff_after_target = rmoutliers(diff_after_target,'percentiles',[5 95]);
+    histogram(diff_after_target,30);
     title("Target-After peak");
     subplot(3,1,2);
+    diff_peak_after = rmoutliers(diff_peak_after,'percentiles',[5 95]);
     histogram(diff_peak_after,30);
     title("After peak-peak");
     subplot(3,1,3);
-    g = [ones(length(peaks),1)*1; ones(length(slow_peaks),1)*2; ones(length(fast_peaks),1)*3];
-    x = [peaks; slow_peaks; fast_peaks];
-    boxplot(x,g,'Labels',["all","fast","all"])
-    title("peak velocity");
+    peaks = rmoutliers(peaks,'percentiles',[5 95]);
+    slow_peaks = rmoutliers(slow_peaks,'percentiles',[5 95]);
+    fast_peaks = rmoutliers(fast_peaks,'percentiles',[5 95]);
+    g = [ones(length(slow_peaks),1)*1; ones(length(peaks),1)*2; ones(length(fast_peaks),1)*3];
+    x = [slow_peaks; peaks; fast_peaks];
+    n_slow = length(slow_peaks)/length(peaks);
+    n_fast = length(fast_peaks)/length(peaks);
+    boxplot(x,g,'Labels',["slow","all","fast"])
+    title(sprintf("peak velocity slow %.2f fast %.2f",n_slow, n_fast));
 end
