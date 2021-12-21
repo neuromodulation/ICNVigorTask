@@ -15,6 +15,7 @@ n_blocks = 3;
 changes_vel = zeros(n_files, n_conds); 
 changes_vel_after = zeros(n_files, n_conds); 
 diffs_stim_peak_mean = zeros(n_files, n_conds); 
+changes_vel_no_after = zeros(n_files, n_conds); 
 
 for i_file=1:n_files
     
@@ -88,13 +89,23 @@ for i_file=1:n_files
         % Get the average change from baseline in velocity 
         changes_vel(i_file, i_cond) = mean(peaks);
         
-        % Save also the movements after stimulation 
+        % Save also the mean velocity of movements after stimulation 
         ind_after_stim = find(stim == 1) + 1; 
         ind_after_stim = ind_after_stim(ind_after_stim <= length(peaks));
         changes_vel_after(i_file, i_cond) = mean(peaks(ind_after_stim));
         
-        % Save the peaks after a stimulation and the times before the stim
-        % and peak of the previous trial for correlation analysis
+        % Plot the difference after stim or no stim
+        figure;
+        t = peaks(ind_after_stim);
+        u = peaks(setdiff(1:length(peaks),ind_after_stim));
+        histogram(u); hold on; histogram(t); xline(mean(t), "r", "LineWidth", 2); xline(mean(u),"b", "LineWidth", 2); legend(["No stim","Stim"]);
+        conds = ["Slow","Fast"];
+        title(conds(i_cond));
+        % Save the mean velocity of movements after no stimulation 
+        changes_vel_no_after(i_file, i_cond) = mean(peaks(setdiff(1:length(peaks),ind_after_stim)));
+        
+        % Save the peaks after a stimulation and the time difference between
+        % before the stim and peak of the previous trial for correlation analysis
         changes_vel_after_all = cat(1,changes_vel_after_all,peaks(ind_after_stim));
         diffs_stim_peak_all = cat(1,diffs_stim_peak_all, filloutliers(diffs_stim_peak(ind_after_stim-1), "linear"));
         
@@ -103,17 +114,17 @@ for i_file=1:n_files
         diffs_stim_peak_mean(i_file, i_cond) = mean(filloutliers(diffs_stim_peak, "center"));
     end
     %% 
-    figure;
-    subplot(1,3,1);
-    bar([1, 2], changes_vel(i_file, :)); hold on; 
-    set(gca, 'XTickLabel', {"slow" "fast"});
-    subplot(1,3,2);
-    bar([1, 2], diffs_stim_peak_mean(i_file, :)); hold on; 
-    set(gca, 'XTickLabel', {"slow" "fast"});
-    subplot(1,3,3);
-    scatter(changes_vel_after_all,diffs_stim_peak_all); hold on; 
-    r = corrcoef(changes_vel_after_all,diffs_stim_peak_all);
-    title(sprintf("Corr %.2f",r(1,2)));
+%     figure;
+%     subplot(1,3,1);
+%     bar([1, 2], changes_vel_after(i_file, :)); hold on; 
+%     set(gca, 'XTickLabel', {"slow" "fast"});
+%     subplot(1,3,2);
+%     bar([1, 2], changes_vel_no_after(i_file, :)); hold on; 
+%     set(gca, 'XTickLabel', {"slow" "fast"});
+%     subplot(1,3,3);
+%     scatter(changes_vel_after_all,diffs_stim_peak_all); hold on; 
+%     r = corrcoef(changes_vel_after_all,diffs_stim_peak_all);
+%     title(sprintf("Corr %.2f",r(1,2)));
 end
 %% Plot the averagee velocity for each condition as a box plot 
 figure;
