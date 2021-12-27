@@ -18,10 +18,9 @@ if ~any(fieldnames(options) == "slow_first")
 end
 
 % Set some parameters
-n_trials = 32; 
+n_trials = 33; 
 blocks = 3:14;
 n_blocks = length(blocks);
-block_sets = [3:8;9:14];
 movement_thres = options.threshold_vel_move_start;
 time = 100;
 peaks_mean_all = [];
@@ -86,7 +85,7 @@ sgtitle(filename(1:end-15));
 close all;
 
 % Set some parameters
-n_trials = 32; 
+n_trials = 33; 
 blocks = 3:14;
 block_sets = [3:8;9:14];
     
@@ -96,39 +95,43 @@ n_files = length(filenames);
 conditions = ["Slow","Fast"];
 peaks_all_files = [];
 peaks_mean_all_files = [];
+peaks_all_raw = [];
 for i_file=1:n_files
     
     % Load the data
     load(strcat('..\..\Data\Parkinson\',filenames(i_file).name));
     data = struct.data; 
     options = struct.options; 
-    if ~any(fieldnames(options) == "slow_first")
-        options.slow_first = options.cond;
+    if ~any(fieldnames(options) == "cond")
+        options.cond = options.slow_first;
+    end
+    
+    % Change the block order accordingly such that slow always comes first
+    if options.cond
+        block_sets = [3:8; 9:14];
+    else
+        block_sets = [9:14; 3:8];
     end
     
     movement_thres = options.threshold_vel_move_start;
     time = 100;
     peaks_mean_all = [];
     peaks_all = [];
+    peaks_raw = [];
     
     for i=1:size(block_sets,1)
         peaks = []; 
         for i_block=block_sets(i,:)
             % Get the peak velocity
             for i_trial=1:n_trials
-                [peak, ~] = get_peak_velocity_and_time(data,i_block,i_trial,movement_thres, time);
-                if peak < 16000
+                if ~(ismember(i_block,[3,6,9,12]) && i_trial == 1)
+                    [peak, ~] = get_peak_velocity_and_time(data,i_block,i_trial,movement_thres, time);
                     peaks = cat(1,peaks,peak);
-                else
-                    if peaks
-                        peaks = cat(1,peaks,peaks(end-1));
-                    else
-                        peaks = cat(1,peaks,14000);
-                    end
                 end
             end
         end
-
+        peaks = filloutliers(peaks, "linear");
+        peaks_raw = cat(2, peaks_raw, peaks);
         % Averages the peaks over 5 movements 
         n_peaks = length(peaks);
         peaks_mean = mean(reshape(peaks(1:end-mod(n_peaks,5)),5,[]),1);
@@ -139,20 +142,17 @@ for i_file=1:n_files
         peaks_mean_all = cat(1,peaks_mean_all,peaks_mean);
         peaks_all = cat(1,peaks_all,peaks.');
     end
+    peaks_all_raw = cat(3, peaks_all_raw, peaks_raw);
     % Plot the normalized velocity
     subplot(ceil(n_files/2),2,i_file);
     x = linspace(1,n_peaks,length(peaks_mean));
-    if options.slow_first == 0
-        peaks_mean_all = peaks_mean_all([2 1],:);
-        peaks_all = peaks_all([2 1],:);
-    end
     plot(x, peaks_mean_all(1,:),'b',x, peaks_mean_all(2,:),'r','LineWidth',2);
     title(filenames(i_file).name(1:end-15));
     %xline(floor(n_peaks/2),"label","Stimulation offset");
     xline(floor(n_peaks/2));
     f=get(gca,'Children');
     if i_file == 1
-        %legend([f(3),f(2)],conditions);
+        legend(conditions);
         xlabel("Trial number");
     end
     hold on;
@@ -273,4 +273,18 @@ figure();
 boxplot(stim_diff_all, g);
 ylabel("Time in sec");
 title("Time of Stimulation - Time of peak");
+
+%% Test matrix
+figure;
+for i=1:10
+    subplot(5,2,i);
+    plot(peaks_all_raw(:,:,i)); 
+end
+
+%%
+names = {};
+for i=1:n_files
+    tmp = filenames(i).name; 
+    names{i} = tmp;
+end
 
