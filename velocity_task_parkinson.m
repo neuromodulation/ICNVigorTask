@@ -1,26 +1,39 @@
 
-%% Movement velocity reinforcement task for parkinson patients with DBS
+%% Vigor Stim task
+% The participant moves a pen from one side of the tablet to the other and
+% slow/fast movements are stimulated
 
-% Slow or fast movements are stimulated
-% based on the velocity of the last two movements 
+% Structure: 
+% Test: 
+% 15 movements to get aquianted with the task and check the stimulation
+% effect
+% Experiment:
+% Condition 1: Slow movements (slower than the last two movements) are
+% stimulated
+% Condition 2: Fast movements (faster than the last two movements) are
+% stimulated
+% The order of the conditions is alternated between subjects and after each
+% stimulation block follows a recovery block of the same length without
+% stimulation
+
 % Task optimized for 3840x2160 screen resolution
 
 % Author: Alessia Cavallo (alessia.cavallo16@gmail.com)
 
 %% Prepare the environment
-
 addpath(genpath("C:\CODE\wjn_toolbox"));
 addpath(genpath("C:\CODE\Neuro Omega System SDK"));
 addpath(genpath("C:\CODE\Psychtoolbox\PsychInitialize"));
 PsychStartup;
-
 clear all; try AO_CloseConnection(); end
-time = tic; % Timer from the beginning of the experiment
 
+%% SET PARAMETERS
 % Parameter for using the stimulation and neurophysiological recordings
 % Only set to false for debugging
 use_stim = false;
 use_tmsi = false;
+
+%% Set experiment and subject properties 
 
 % Get input from experimenter
 test = ~input("Mode: Write 0=Test or 1=Experiment\n");
@@ -28,11 +41,11 @@ modes = ["Experiment","Test"];
 disp(strcat("OK, running the ", modes(test+1)));
 
 % If running the test use some default parameters
-if test
+if test && use_stim
     stim_amp_R = input("Stimulation amplitude Right:\n");
     stim_amp_L = input("Stimulation amplitude Left:\n");
 % For the experiment get more information 
-else
+elseif ~test
     n_par = input("Participant number (Integer):\n");
     % Compute condition based on participant number (alternating order)
     cond = logical(mod(n_par,2));
@@ -64,7 +77,7 @@ if use_stim
     availableChannelsID = init_NO();
     display(availableChannelsID);
 
-    % set stimulation parameters !!!!!!!!!!!!!!!!!!!!
+    % set stimulation parameters
     options.stim_channels = [10016, 10017];
     options.stim_return_channel=-1;
     options.stim_amp_R=stim_amp_R; % mA
@@ -93,7 +106,7 @@ Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(2);
 screens = Screen('Screens');
 screenNumber = max(screens); % Get the number of the external screen if there is one attached
-window_dim = [100 100 1800 900]; % Define the dimension of the psychtoolbox window
+window_dim = [100 100 1800 900]; % Define the dimension of the psychtoolbox window, [] for full screen
 [window, windowRect] = Screen('OpenWindow', screenNumber, [0 0 0], window_dim);  % Open a black window
 [screenXpixels, screenYpixels] = Screen('WindowSize', window); % Get the dimension of the window in pixels
 [xCenter, yCenter] = RectCenter(windowRect); % Get the center coordinates of the window
@@ -106,15 +119,17 @@ if test % For the test only perform 15 trials
     n_trials = [15]; % Number of trials in each (experimental) block
     n_blocks = 1 ; % Total number of blocks
 else
-    n_trials = [97,96,97,96]; % Number of trials, after a break an extra trial is needed
-    n_blocks = 4 ;
+    % Number of trials, after a break an extra trial is needed as the
+    % first trial after a block starts from the bottom
+    n_trials = [97,96,97,96];  
+    n_blocks = 4 ; % Stim-Recovery-Stim_Recovery
 end
 stim_blocks = [1 3]; % Blocks during which stimulation is applied
 break_blocks = stim_blocks; % Blocks before which there is break, same as stimulation
 data = []; % Matrix that will contain all behavioral data aquired during the experiment
 data_tmsi = []; % Matrix that will contain all neurophysiological data aquired during the experiment
 time = tic; % Timer from the beginning of the experiment
-thres_move_start_x = 300; % pixel/sec Distance from target that has to be passed for the movement to start
+thres_move_start_x = 600; % pixel/sec Distance from target that has to be passed for the movement to start
 
 % Define target properties
 target_w_h = 350; % Width = Height of target rectangle
@@ -125,7 +140,7 @@ target_col_default = [0 200 200 0]; % Default = blue
 target_col_change = [200 200 0]; % Change = Yellow (once the pen is on it)
 target_col = target_col_default;
 target_stay_time = 0.35; % Time that needs to be spent on target for trial completion
-side = 1;
+side = 1; % Side to start with, either 1 or -1 (left/right)
 
 % Define properties of the start button
 start_button_width = 1000;
@@ -148,7 +163,8 @@ background_col_default = black;
 background_col_change = [100 100 100];
 
 % Load pseudo randomized y target positions (same for each participant)
-load('target_pos_y_ind.mat');
+% In every block the same movements appear in randomized order
+load('utils\target_pos_y_ind.mat');
 
 % Other variables
 escapeKey = KbName('ESCAPE');
@@ -162,15 +178,20 @@ for i_block=1:n_blocks
         
         % Draw a welcome text for the first block
         if i_block == 1
+            if test
             header_text = strcat('Wilkommen! Vielen Dank, dass Sie sich bereit erklären, bei diesem kleinen Experiment teilzunehmen.',...
             ' Ihre Aufgabe ist es, Ihren Stift von einer Seite des Bildschirms zur anderen Seite zu bewegen.',...
             ' Wenn Sie ein Viereck sehen, bewegen Sie den Stift bitte dort hin und bleiben Sie auf dem Viereck, bis auf der anderen Seite',...
             ' ein neues Viereck erscheint. Dann bewegen Sie den Stift zu dem neuen Viereck.',...
             ' Bitte bewegen Sie sich so schnell wie möglich und berühren Sie durchgängig den Bildschirm mit dem Stift.\n \n',...
-            ' Sie haben während des Experiments wieherholt die Möglichkeit Pausen einzulegen und Sie können das Experiment jederzeit abbrechen.');
-            DrawFormattedText(window,header_text,'center',header_text_pos_y,white,80,[],[],1.5);
+            ' Wir starten nun eine kurze Testrunde.');
+            else
+                header_text = strcat('Wir starten nun das Experiment! Sie haben jederzeit die Möglichkeit das Experiment',...
+                    'abzubrechnen');
+            end
+        DrawFormattedText(window,header_text,'center',header_text_pos_y,white,80,[],[],1.5);
         
-        % Force a short break for the other blocks
+        % Force a short break for the other break block
         else
             for i=1:break_time_sec
                 header_text = sprintf('PAUSE \n\n\n\n %i',break_time_sec - i);
@@ -191,7 +212,8 @@ for i_block=1:n_blocks
         block_started = false;
         while ~block_started
 
-            % Exit experiment if escape is pressed
+            % Exit experiment if escape is pressed and close connections to
+            % tmsi and AO if used
             [keysDown,secs, keyCode] = KbCheck;
             if keyCode(escapeKey)
                 sca; 
@@ -204,7 +226,9 @@ for i_block=1:n_blocks
                     library.destroy();
                end
             end
-
+            
+            % Get the positions of the mouse and check if it is on the 
+            % start button 
             [x_mouse, y_mouse, ~] = GetMouse(window);
             on_start_button = abs(x_mouse - start_button_pos_x) < start_button_width /2 & ...
                 abs(y_mouse - start_button_pos_y) < start_button_height /2;
@@ -225,20 +249,27 @@ for i_block=1:n_blocks
         
         % Inititalize counter for the target positions 
         i_count_pos = 0;
+        % ???
         i_block_break = find(i_block==break_blocks);
     end
     
-    %% Start a block of n_trials
+    %% Start a block 
+    % Get the number of trials for that block
     n_trials_block = n_trials(i_block);
     for i_trial=1:n_trials_block
         
-        % At the start of each trial...
+        %% Prepare the trial
         side = side * -1; % Change the side the target is displayed
-        % Reset the variables
-        i_sample = 0; move_started = false; first_sample_after_threshold = true; stim=false;
+        % Reset variables
+        i_sample = 0; 
+        move_started = false; 
+        first_sample_after_threshold = true; 
+        stim=false;
         % Set the colors back to default
         target_col = target_col_default;
-        background_col = background_col_default;
+        background_col = background_col_default; % used only for debugging (instead of stimulation the background changes color)
+        % Counter for the position of the rectangle in a block set without
+        % a break 
         i_count_pos = i_count_pos + 1;
         
         % Get the position of the target and define it
@@ -247,7 +278,7 @@ for i_block=1:n_blocks
         target = CenterRectOnPointd(target_size, target_pos_x, target_pos_y);
         
         trial_completed = false;
-        
+        %% Start the trial
         while ~trial_completed
             
             % Draw the traget on the screen 
@@ -257,9 +288,11 @@ for i_block=1:n_blocks
             
             % Get the next sample from the mouse 
             [x_mouse, y_mouse, ~] = GetMouse(window);
+            % Get the time 
             sample_time = toc(time);
             global_time = clock;
             global_time = global_time(4:end);
+            % Increase the sample counter for one trial
             i_sample = i_sample + 1;
             
             % Get the tmsi samples 
@@ -281,10 +314,7 @@ for i_block=1:n_blocks
                 end
             end
             
-            %% Is the target already reached?
-            
-            % Check if target is reached (mouse is on target rectangle for
-            % a specific amount of time)
+            %% Check if target is reached
             on_target = abs(x_mouse - target_pos_x) < target_w_h /2 & ...
                       abs(y_mouse - target_pos_y) < target_w_h /2;
                   
@@ -308,11 +338,10 @@ for i_block=1:n_blocks
                     trial_completed = true; 
                 end
             end
-            
+ 
             %% Compute velocity and save the data
-            % Only after the first trial after a break as the first trial
-            % is not complete
-            
+            % After a break, skip the first trial as it starts at the
+            % bottom
             if ~(ismember(i_block, break_blocks) && i_trial == 1)
                 
                 % For the first sample save only the positions
@@ -322,20 +351,22 @@ for i_block=1:n_blocks
 
                 % If at least 2 samples are taken compute the velocity
                 if i_sample >= 2 
-                    passed_time = sample_time - data(end, 3); % Compute the time passed between the samples
+                    passed_time = sample_time - data(end, 3); 
                     x_vel = abs(x_mouse - data(end,1)) / passed_time;
                     y_vel = abs(y_mouse - data(end,2)) / passed_time;
                     vel = sqrt(x_vel.^2 + y_vel.^2); % Velocity independent of direction
                     mean_vel = 0;
                 end
                 
-                % If at least 7 samples are taken compute the average velocity
-                if i_sample >= 4
+                % If at least 5 samples are taken compute the average
+                % velocity over 4 values
+                if i_sample >= 5
                     mean_vel = mean([vel; data(end-2:end,5)], [1, 2]);
                 end
             
                 % Save the behavioral data 
-                if ismember(i_block, break_blocks) && i_trial > 1
+                % Substract one for the blocks after a break
+                if ismember(i_block, break_blocks)
                     i_trial_save = i_trial - 1;
                 else
                     i_trial_save = i_trial;
@@ -348,10 +379,12 @@ for i_block=1:n_blocks
                 % Save the neurophysiological data from tmsi 
                 if use_tmsi
                     data_tmsi = cat(2,data_tmsi,samples_tmsi)
+                    % Save also the number of samples taht are drawn from
+                    % tmsi (for later upsampling of the behavioral data)
                     sample_length_tmsi = cat(1, sample_length_tmis, size(data_tmsi, 2));
-                end
+                end 
                 
-                % Set the time of the start of the movement
+                %% Check if movement has started 
                 % Start of movement when a distance threshold from the last
                 % target is passed
                 if abs(x_mouse - target_pos_x_old) > thres_move_start_x
@@ -370,7 +403,8 @@ for i_block=1:n_blocks
             % peak is passed
             % it is the first time for each movement these conditions are
             % met --> trigger stimulation only once per movement
-            if ~(i_trial == 1 && ismember(i_block, break_blocks)) && (ismember(i_block, stim_blocks) || test) && move_started ...
+            if ~(i_trial == 1 && ismember(i_block, break_blocks)) &&...
+                (ismember(i_block, stim_blocks) || test) && move_started ...
                 && first_sample_after_threshold && all(diff(data(end-2:end,4)) < 0)
                 
                 % Get the peak velocity and append it to the array storing
@@ -380,23 +414,22 @@ for i_block=1:n_blocks
                 
                 % Trigger the stimulation if.. 
                 % already 3 movements were performed
-                % none of the last 3 movements was an outlier (change
-                % between velocities below threshold)
-                if length(peaks) > 3
+                if length(peaks) >= 3
                     peak_diff = peaks(end) - peaks(end-2:end-1);
                     
                     % Trigger the stimulation if..
+                    % the test is performed
                     % Slow = Peak velocity lower than the last two movements
                     % Fast = Peak velocity higher than the last two movements
-                    % cond = 1 Slow/Fast cond = 0 Fast/Slow
-                    % the test is performed
-                    if test || all(peak_diff < 0) && cond && i_block==stim_blocks(1) ||...
+                    % cond = 1 Slow/Fast cond = 0 Fast/Slow  
+                    if test || ...
+                    all(peak_diff < 0) && cond && i_block==stim_blocks(1) ||...
                     all(peak_diff < 0) && ~cond && i_block==stim_blocks(2) ||...
                     all(peak_diff > 0) && ~cond && i_block==stim_blocks(1) ||...
                     all(peak_diff > 0) && cond && i_block==stim_blocks(2)
                          stim = true;
-                         if use_stim
                          %% Send the stimulation trigger to the AO System
+                         if use_stim
                             % Which one is right or left??
                             stimStandard_NO(options.stim_channels(1), options.stim_return_channel, options.stim_amp_R, options.stim_pw, options.stim_hz, options.stim_duration)
                             stimStandard_NO(options.stim_channels(2), options.stim_return_channel, options.stim_amp_L, options.stim_pw, options.stim_hz, options.stim_duration)
@@ -409,7 +442,7 @@ for i_block=1:n_blocks
             end
         end
         target_pos_x_old = target_pos_x; % Save last target position
-        Screen('FillRect',window,black);
+        Screen('FillRect',window,black); % Reset background color at end of trial
         Screen('Flip', window);
     end
 end
@@ -434,11 +467,15 @@ if ~test
                 "-", conditions(cond+1),"-StimOn","-run-0",string(run),...
                 "-behavioral.mat");
     % Put all the data into one structure
-    options.cond = cond; options.date = date; options.med = med; options.hand = hand; options.run = run;
-    options.threshold_vel_move_start = threshold_vel_move_start;
+    options.cond = cond; 
+    options.date = date; 
+    options.med = med; 
+    options.hand = hand; 
+    options.run = run;
+    options.thres_move_start_x = thres_move_start_x;
     struct.options = options;
     struct.data = data;
-    save(strcat(pwd,'/Data/Parkinson/',file_name), "struct");
+    save(strcat(pwd,'\..\..\Data\Parkinson\',file_name), "struct");
     
     % Save the neurophsyiological data
     if use_tmsi
@@ -451,6 +488,6 @@ if ~test
         file_name = strcat("sub-",string(n_par),"-",med,"-task-VigorStim-",hand,...
                             "-", conditions(cond+1),"-StimOn","-run-0",string(run),...
                             "-neuro.mat");
-        save(strcat(pwd,'/Data/Parkinson/',file_name), "data_tmsi");
+        save(strcat(pwd,'..\..\Data\Parkinson\',file_name), "data_tmsi");
     end
 end

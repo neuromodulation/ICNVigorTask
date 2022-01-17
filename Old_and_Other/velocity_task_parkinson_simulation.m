@@ -2,10 +2,11 @@
 % Check the task changes on the already recorded datasets
 
 % Get a list of all datasets 
-close all;
+%close all;
 filenames = dir(fullfile('..\..\Data\Parkinson\',"*.mat"));
 n_files = length(filenames);
-thres_x_move_start = 300;
+thres_x_move_start =600;
+plot_one_trial = false;
 for i_file=1:n_files
     
     % Load the data
@@ -32,21 +33,6 @@ for i_file=1:n_files
                 data_vel_av(i) = mean(data_trial(i-3:i,5));
             end
             
-%             figure; 
-%             plot(data_trial(:,[1 4 5]), "LineWidth", 2); 
-%             hold on; 
-%             plot(data_vel_av,"LineWidth", 2);
-%             hold on;
-%             [y,x] = max(data_vel_av);
-%             plot(x,y,".",'MarkerSize',25);
-%             hold on;
-%             [y,x] = max(data_trial(:,4));
-%             plot(x,y,".",'MarkerSize',25);
-%             hold on;
-%             [y,x] = max(data_trial(:,5));
-%             plot(x,y,".",'MarkerSize',25);
-%             legend(["x mouse","mean vel", "vel", "new mean vel"]);
-            
             % Find the index of the target
             ind_target = find(data_trial(:,10)==1,1);
             
@@ -61,6 +47,29 @@ for i_file=1:n_files
                     break;
                 end
             end
+            
+            if plot_one_trial
+                figure; 
+                plot(data_trial(:,[1 4 5]), "LineWidth", 2); 
+                hold on; 
+                plot(data_vel_av,"LineWidth", 2);
+                hold on;
+                [y,x] = max(data_vel_av);
+                plot(x,y,".",'MarkerSize',25);
+                hold on;
+                [y,x] = max(data_trial(:,4));
+                plot(x,y,".",'MarkerSize',25);
+                hold on;
+                [y,x] = max(data_trial(:,5));
+                plot(x,y,".",'MarkerSize',25);
+                legend(["x mouse","mean vel", "vel", "new mean vel"]);
+                hold on; 
+                plot(ind_after_peak,data_vel_av(ind_after_peak),"*",'MarkerSize',25);
+                hold on;
+                thres_pos = find(abs(data_trial-data_trial(1,1)) > thres_x_move_start,1);
+                xline(thres_pos);
+            end
+            
             % Get the peak before the index after the peak
             [peak_after,~] = max(data_vel_av(1:ind_after_peak));
             if peak < 20000

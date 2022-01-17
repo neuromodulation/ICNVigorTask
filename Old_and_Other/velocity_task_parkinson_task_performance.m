@@ -1,4 +1,4 @@
-%% Measure the task perfromance 
+%% Measure the task performance 
 % -> Inclusion criteria for the participants
 % 1. Correct amount of movements are stimulated (between 25-40 %)
 % 2. Correct movements are stimulated (sensitivity + specificity)

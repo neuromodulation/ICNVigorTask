@@ -14,6 +14,8 @@ subplot_indxs = [1 2; 3 4];
 
 %%
 zscores = [];
+corrs = [];
+three_after_stim_all = [];
 for i_file=1:n_files
     
     % Load the data
@@ -107,8 +109,9 @@ for i_file=1:n_files
         % stimulation and the time between the peak and stimulation
         subplot(2,4,i_cond);
         diff_stim_after = peaks(inds_after_stim) - peaks(inds_stim);
-        scatter(diff_stim_after,diffs_stim_peak);
-        r = corrcoef(diff_stim_after,diffs_stim_peak);
+        scatter(diff_stim_after,abs(diffs_stim_peak));
+        r = corrcoef(diff_stim_after,abs(diffs_stim_peak));
+        corrs = cat(1,corrs,r(1,2));
         title(conds(i_cond) + " " + string(r(1,2)));
         xlabel("Diff Peak velocity next trial-stim");
         ylabel("Time from peak to stimulation (sec)");
@@ -188,6 +191,7 @@ for i_file=1:n_files
     %legend(["Slow" "Fast no stim" "Fast" "Slow no stim"]);
     title("Av. difference of peak velocity to stim trial");
     xlabel("Trial number after stim");
+    three_after_stim_all = cat(3,three_after_stim_all,three_after_stim);
     
     % Compute teh standard deviation of the peaks in the first two blocks
     peaks = [];
@@ -205,7 +209,6 @@ for i_file=1:n_files
     end
     peaks = filloutliers(peaks,"linear");
     standdev = std(peaks);
-    
     
     % Plot the time difference between stim and peak for both conditions
     % in a box plot 
@@ -258,32 +261,56 @@ for i_file=1:n_files
     ylabel("Normalized peak velocity");
     title("Recovery - No Stimulation");
     
+    % Plot average movement velocity start/end of stimulation/recovery
+    % blocks
+    subplot(2,4,7);
+    means = [mean(peaks_all(:,2:3),2),mean(peaks_all(:,end-1:end),2),...
+    mean(peaks_all_recov(:,2:3),2),mean(peaks_all_recov(:,end-1:end),2)];
+    plot(means.');
+    hold on;
+    scatter(1:4,means(1,:),"blue","filled");
+    hold on;
+    scatter(1:4,means(2,:),"red","filled");
+    ylabel("Normalized peak velocity pixel/sec");
+    set(gca, 'XTick', 1:4, 'XTickLabels', {'5-15 Stim', '85-95 Stim', 'Recov', 'Recov'})
+    % Add the unnormalized lines
+    hold on;
+    plot(means(1,:)+baselines(1),'--','Color','b');
+    hold on;
+    plot(means(2,:)+baselines(2),'--','Color','r');
+    hold on;
+    scatter(1:4,means(1,:)+ baselines(1),"blue","filled");
+    hold on;
+    scatter(1:4,means(2,:)+baselines(2),"red","filled");
+    ylabel("Peak velocity pixel/sec");
+    set(gca, 'XTick', 1:4, 'XTickLabels', {'5-15 Stim', '90-95 Stim', 'Recov', 'Recov'})
+    
     % Z-score the peak values using the baseline and the std of the first
     % two blocks
-    peaks_all_zscore = (peaks_all_raw)/standdev;
-    peaks_all_recov_zscore = (peaks_all_raw_recov)/standdev;
-    % Plot the mean z-score
-    subplot(2,4,7);
-    plot_data = [mean(peaks_all_zscore,1); mean(peaks_all_recov_zscore,1)];
-    plot_error = [std(peaks_all_zscore,1); std(peaks_all_recov_zscore,1)];
-    b = bar(plot_data);
-    hold on;
-    ylabel("zscore");
-    set(b, {'DisplayName'}, {'Slow','Fast'}')
-    legend();
-    set(gca, 'XTick', 1:2, 'XTickLabels', {'Stim','Recovery'})
-    % Add error bars
-    % Calculate the number of groups and number of bars in each group
-    [ngroups,nbars] = size(plot_data);
-    % Get the x coordinate of the bars
-    x = nan(nbars, ngroups);
-    for i = 1:nbars
-        x(i,:) = b(i).XEndPoints;
-    end
-    % Plot the errorbars
-    errorbar(x',plot_data,plot_error,'k','linestyle','none');
-    % Save the zscores for one file 
-    zscores = cat(3,zscores,plot_data);
+%     peaks_all_zscore = (peaks_all_raw)/standdev;
+%     peaks_all_recov_zscore = (peaks_all_raw_recov)/standdev;
+%     % Plot the mean z-score
+%     subplot(2,4,7);
+%     plot_data = [mean(peaks_all_zscore,1); mean(peaks_all_recov_zscore,1)];
+%     plot_error = [std(peaks_all_zscore,1); std(peaks_all_recov_zscore,1)];
+%     b = bar(plot_data);
+%     hold on;
+%     ylabel("zscore");
+%     set(b, {'DisplayName'}, {'Slow','Fast'}')
+%     legend();
+%     set(gca, 'XTick', 1:2, 'XTickLabels', {'Stim','Recovery'})
+%     % Add error bars
+%     % Calculate the number of groups and number of bars in each group
+%     [ngroups,nbars] = size(plot_data);
+%     % Get the x coordinate of the bars
+%     x = nan(nbars, ngroups);
+%     for i = 1:nbars
+%         x(i,:) = b(i).XEndPoints;
+%     end
+%     % Plot the errorbars
+%     errorbar(x',plot_data,plot_error,'k','linestyle','none');
+%     % Save the zscores for one file 
+%     zscores = cat(3,zscores,plot_data);
     
     % Plot the performance of the task (Stimulation of correct movements)
     subplot(2,4,8);
@@ -308,10 +335,11 @@ for i_file=1:n_files
 
 end
 
-%% Plot the mean z-scores of all files 
+%% Plot summry plots of all datasets
 % Z-score the peak values using the baseline and the std of the first
 % two blocks
 figure;
+subplot(1,3,1);
 plot_data = mean(zscores,3);
 plot_error = std(zscores,[],3);
 b = bar(plot_data);
@@ -332,3 +360,29 @@ end
 errorbar(x',plot_data,plot_error,'k','linestyle','none');
 % Save the zscores for one file 
 zscores = cat(3,zscores,plot_data);
+
+% Summary correlation 
+subplot(1,3,2);
+boxplot([corrs(1:2:end); corrs(2:2:end)],[ones(10,1);ones(10,1)*2]);
+set(gca, 'XTickLabel', {"Slow" "Fast"});
+ylabel("Correlation coefficient");
+
+% Summary 3 after 
+subplot(1,3,3);
+three_after_stim = mean(three_after_stim_all,3);
+for i=1:4
+    if i == 1
+        plot(three_after_stim(:,i), 'b');
+    elseif i == 2
+        plot(three_after_stim(:,i),'--','Color','r');
+    elseif i == 3
+        plot(three_after_stim(:,i), 'r');
+    elseif i == 4
+        plot(three_after_stim(:,i), '--','Color','b');
+    end
+    hold on;
+end
+legend(["Slow" "Fast no stim" "Fast" "Slow no stim"]);
+ylabel("Av. difference of peak velocity to stim trial");
+xlabel("Trial number after stim");
+saveas('../../Plots/AllDatasets.png');
