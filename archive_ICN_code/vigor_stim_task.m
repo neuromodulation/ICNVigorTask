@@ -12,11 +12,9 @@
 % stimulated
 % Condition 2: Fast movements (faster than the last two movements) are
 % stimulated
-% The order of the conditions is alternated between subjects 
-% after each stimulation block follows a recovery block of the same length without
+% The order of the conditions is alternated between subjects and after each
+% stimulation block follows a recovery block of the same length without
 % stimulation
-% Mandatory break between conditions
-% Quit experiment by pressing escape
 
 % Author: Alessia Cavallo (alessia.cavallo16@gmail.com)
 
@@ -29,8 +27,8 @@ clear all; try AO_CloseConnection(); end
 %% SET PARAMETERS
 % Parameter for using the stimulation
 % Only set to false for debugging
-use_stim = true;
-fullscreen = true;
+use_stim = false;
+fullscreen = false;
 
 % Control smootheness of velocity curve
 smoothness = 6; % Average over x velocity values 
@@ -49,8 +47,6 @@ disp(strcat("OK, running the ", modes(test+1)));
 if test && use_stim
     stim_amp_R = input("Stimulation amplitude Right:\n");
     stim_amp_L = input("Stimulation amplitude Left:\n");
-    contacts_R = 0;
-    contacts_L = 0;
 % For the experiment get more information 
 elseif ~test
     tmsi_reminder = input("REMEMBER TO TURN ON TMSI!!!! Press 1 if done \n");
@@ -124,11 +120,12 @@ else
     % Number of trials, after a break an extra trial is needed as the
     % first trial after a block starts from the bottom
     n_trials = [97,96,97,96];  
-    n_blocks = 4; % Stim-Recovery-Stim_Recovery
+    n_blocks = 4 ; % Stim-Recovery-Stim_Recovery
 end
 stim_blocks = [1 3]; % Blocks during which stimulation is applied
 break_blocks = stim_blocks; % Blocks before which there is break, same as stimulation
 data = []; % Matrix that will contain all behavioral data aquired during the experiment
+data_tmsi = []; % Matrix that will contain all neurophysiological data aquired during the experiment
 time = tic; % Timer from the beginning of the experiment
 thres_move_start_x = 200; % pixel/sec Distance from target that has to be passed for the movement to start
 
@@ -188,7 +185,7 @@ for i_block=1:n_blocks
             ' Wir starten nun eine kurze Testrunde.');
             else
                 header_text = strcat('Wir starten nun das Experiment! Sie haben jederzeit die Möglichkeit das Experiment ',...
-                    ' abzubrechen');
+                    ' abzubrechnen');
             end
         DrawFormattedText(window,header_text,'center',header_text_pos_y,white,80,[],[],1.5);
         
@@ -365,6 +362,7 @@ for i_block=1:n_blocks
                 % Start of movement when a distance threshold from the last
                 % target is passed
                 if abs(x_mouse - target_pos_x_old) > thres_move_start_x
+                    move_start_time = toc(time);
                     move_started = true;
                 end
             end
@@ -381,8 +379,7 @@ for i_block=1:n_blocks
             % met --> trigger stimulation only once per movement
             if ~(i_trial == 1 && ismember(i_block, break_blocks)) &&...
                 (ismember(i_block, stim_blocks) || test) && move_started ...
-                && first_sample_after_threshold && ...
-                all(diff(data(end-decrease_threshold:end,4)) < 0)
+                && first_sample_after_threshold && all(diff(data(end-decrease_threshold:end,4)) < 0)
                 
                 % Get the peak velocity and append it to the array storing
                 % all peaks in one set of blocks (without break)
@@ -424,10 +421,11 @@ for i_block=1:n_blocks
             true_peak = max(data(end-i_sample+1:end,4));
             peaks(end) = true_peak;
         end
-        
+    
         target_pos_x_old = target_pos_x; % Save last target position
         Screen('FillRect',window,black); % Reset background color at end of trial
         Screen('Flip', window);
+        
     end
 end
 %% Close screen at the end of the experiment and close connections

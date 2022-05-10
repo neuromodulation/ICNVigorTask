@@ -2,26 +2,26 @@
 % Check the task changes on the already recorded datasets
 
 % Get a list of all datasets 
-%close all;
-filenames = dir(fullfile('..\..\Data\Parkinson\',"*.mat"));
+close all;
+%filenames = dir(fullfile('..\..\..\Data\Parkinson_Pilot\',"*.mat"));
+filenames = dir(fullfile('..\..\..\Data\',"*.mat"));
 n_files = length(filenames);
-thres_x_move_start =600;
+thres_x_move_start = 200;
 plot_one_trial = false;
 for i_file=1:n_files
     
     % Load the data
-    load(strcat('..\..\Data\Parkinson\',filenames(i_file).name));
+    %load(strcat('..\..\..\Data\Parkinson_Pilot\',filenames(i_file).name));
+    load(strcat('..\..\..\Data\',filenames(i_file).name));
     data = struct.data; 
 
     %% Loop over every movement
-    n_trials = 33;
-    n_blocks = 14;
-    diff_after_target = [];
+    n_trials = 96;
+    n_blocks = 4;
     diff_peak_after = [];
-    diff_peak_after_peak = [];
+    time_peak_stim = [];
     peaks = [];
-    slow_peaks = [];
-    fast_peaks = [];
+    distance = [];
     for i_block=1:n_blocks
         for i_trial=1:n_trials  
             mask = data(:,8) == i_block & data(:,9) == i_trial;
@@ -29,8 +29,8 @@ for i_file=1:n_files
             
             % Average the velocity over less samples 
             data_vel_av = zeros(length(data_trial),1);
-            for i=4:length(data_trial)
-                data_vel_av(i) = mean(data_trial(i-3:i,5));
+            for i=6:length(data_trial)
+                data_vel_av(i) = mean(data_trial(i-5:i,5));
             end
             
             % Find the index of the target
@@ -39,16 +39,26 @@ for i_file=1:n_files
             % Find the true peak 
             [peak,ind_peak] = max(data_vel_av(1:ind_target));
             
+            % Find distance from peak in pixel 
+            d = sqrt((data_trial(ind_peak,1) - data_trial(ind_peak,12))^2 + (data_trial(ind_peak,2) - data_trial(ind_peak,13))^2);
+            distance = cat(1,distance,abs(data_trial(ind_peak,1) - data_trial(ind_peak,12)));
+            
+            % Find peak time 
+            ind_stim = find(data_trial(:,11)==1,1);
+            if ind_stim
+                time_peak_stim = cat(1, time_peak_stim, data_trial(ind_stim-1, 3) - data_trial(ind_peak, 3));   
+            end
+            
             % Find the moment after the peak
             ind_after_peak = 0;
-            for i=3:length(data_trial)
-                if all(diff(data_vel_av(i-2:i)) < 0) && abs(data_trial(i,1)-data_trial(1,1)) > thres_x_move_start
+            for i=5:length(data_trial)
+                if all(diff(data_vel_av(i-3:i)) < 0) && abs(data_trial(i,1)-data_trial(1,1)) > thres_x_move_start
                     ind_after_peak = i;
                     break;
                 end
             end
             
-            if plot_one_trial
+            if ind_stim & plot_one_trial
                 figure; 
                 plot(data_trial(:,[1 4 5]), "LineWidth", 2); 
                 hold on; 
@@ -68,6 +78,8 @@ for i_file=1:n_files
                 hold on;
                 thres_pos = find(abs(data_trial-data_trial(1,1)) > thres_x_move_start,1);
                 xline(thres_pos);
+                xline(ind_stim-1);
+                x = 0;
             end
             
             % Get the peak before the index after the peak
@@ -77,7 +89,7 @@ for i_file=1:n_files
             end
             
             % Save the distances in seconds 
-            try
+            if ind_stim
                 diff_after_target = cat(1, diff_after_target,data_trial(ind_target,3) - data_trial(ind_after_peak,3));
                 diff_peak_after = cat(1, diff_peak_after,data_trial(ind_after_peak,3) - data_trial(ind_peak,3));
                 diff_peak_after_peak = cat(1, diff_peak_after_peak,abs(peak-peak_after));
@@ -92,31 +104,15 @@ for i_file=1:n_files
             end
         end
     end
-%     figure;
-%     plot(abs(diff(peaks))); hold on;
-%     yline(prctile(abs(diff(peaks)),99));
     % Analyse the results
     figure;
-    subplot(4,1,1);
-    diff_after_target = rmoutliers(diff_after_target,'percentiles',[5 95]);
-    histogram(diff_after_target,30);
-    title("Time Target - Stimulation time");
-    subplot(4,1,2);
-    diff_peak_after = rmoutliers(diff_peak_after,'percentiles',[5 95]);
+    subplot(1,2,1);
+    perf_old = sum(time_peak_stim > 0) / length(time_peak_stim);
+    perf_new = sum(diff_peak_after > 0) / length(diff_peak_after);
+    histogram(time_peak_stim,30); hold on;
     histogram(diff_peak_after,30);
-    title("Stimulation time - Time of peak");
-    subplot(4,1,3);
-    diff_peak_after_peak = rmoutliers(diff_peak_after_peak,'percentiles',[5 95]);
-    histogram(diff_peak_after_peak,30);
-    title("Chosen peak - True peak");
-    subplot(4,1,4);
-    peaks = rmoutliers(peaks,'percentiles',[5 95]);
-    slow_peaks = rmoutliers(slow_peaks,'percentiles',[5 95]);
-    fast_peaks = rmoutliers(fast_peaks,'percentiles',[5 95]);
-    g = [ones(length(slow_peaks),1)*1; ones(length(peaks),1)*2; ones(length(fast_peaks),1)*3];
-    x = [slow_peaks; peaks; fast_peaks];
-    n_slow = length(slow_peaks)/length(peaks);
-    n_fast = length(fast_peaks)/length(peaks);
-    boxplot(x,g,'Labels',["slow","all","fast"])
-    title(sprintf("peak velocity slow %.2f fast %.2f",n_slow, n_fast));
+    legend(["Old","New"]);
+    title(sprintf("Old: %.2f New: %.2f ",perf_old * 100, perf_new * 100));
+    subplot(1,2,2);
+    histogram(distance,30); 
 end
