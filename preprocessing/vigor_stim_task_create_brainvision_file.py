@@ -5,7 +5,7 @@ from scipy.stats import zscore
 import numpy as np
 from scipy.signal import detrend
 import easygui
-from utils import norm_0_1
+from ICNVigorTask.utils.utils import norm_0_1
 
 # Add synchronized behavioral data to brain vision file
 
@@ -14,7 +14,7 @@ filename_neuro = easygui.fileopenbox(default="*.vhdr")
 raw_data = mne.io.read_raw_brainvision(filename_neuro, preload=True)
 
 # Load the MATLAB data
-filename_behav = easygui.fileopenbox( default="*.mat")
+filename_behav = easygui.fileopenbox(default="*.mat")
 behav_data = loadmat(filename_behav)
 # Extract the behavioral data stored in a martrix
 behav_data = behav_data["struct"][0][0][1]
@@ -31,14 +31,14 @@ target_chan = raw_data.get_data(["LFP_R_1_STN_BS"]).flatten()
 # Cut the last samples
 # Plot for visual inspection
 plt.plot(target_chan)
-#plt.show()
+plt.show()
 
 # Find the first sample above a threshold
 idx_onset_neuro = np.where(np.abs(zscore(target_chan[:-10])) > 3)[0][0]
 # Plot for visual inspection
 plt.plot(target_chan)
 plt.axvline(idx_onset_neuro, color="red")
-#plt.show()
+plt.show()
 
 # Find the first sample with stimulation in the behavioral data
 behav_data_stim = behav_data[:, 10].flatten()
@@ -59,7 +59,7 @@ idx_stim = np.where(np.diff(behav_data_stim) == 1)[0]
 plt.plot(time_array_neuro, target_chan)
 for idx in idx_stim:
     plt.axvline(time_array_behav[idx], color="red")
-#plt.show()
+plt.show()
 
 # For every sample in the neuro data find the closest sample in the behav data
 n_cols = np.size(behav_data,1)
@@ -83,9 +83,11 @@ raw_data.add_channels([behav_raw], force_update_info=True)
 target_chans = raw_data.get_data(["LFP_R_1_STN_BS", "stim"])
 plt.plot(norm_0_1(target_chans[0,:-10]).T)
 plt.plot(target_chans[1,:-10].T)
+plt.show()
 
+# Save the order of stimulation conditions
 
 # Save new brain vision file
 mne.export.export_raw(fname=filename_neuro[:-5]+"_behav"+".vhdr", raw=raw_data, fmt="brainvision")
 
-plt.show()
+print("Successfully merged neurophysiological and behavioral data")
