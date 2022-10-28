@@ -5,13 +5,17 @@
 % no more breaks between stimulation and recovery blocks
 
 %% Get a list of all datasets 
-close all;
-filenames = dir(fullfile('..\..\Data\Parkinson\',"*.mat"));
+close all; clear all;
+filenames = dir(fullfile('..\..\..\Data\all data modified\',"*.mat"));
+%filenames(1:10)=[];
 n_files = length(filenames);
 n_trials = 96;
 n_conds = 2;
 n_blocks = 1;
 conds = ["Slow","Fast"];
+diffs_stim_peak_all_par = [];
+diffs_stim_peak_all_par_n = [];
+perfs_all = [];
 
 %% Loop through the datasets and create a summary plot for each 
 corrs = [];
@@ -20,7 +24,7 @@ start_end_vel = [];
 for i_file=1:n_files
     
     % Load the data from one recording
-    load(strcat('..\..\Data\Parkinson\',filenames(i_file).name));
+    load(strcat('..\..\..\Data\all data modified\',filenames(i_file).name));
     data = struct.data; 
     options = struct.options; 
     
@@ -220,6 +224,8 @@ for i_file=1:n_files
     % in a box plot 
     subplot(2,4,4);
     boxplot(diffs_stim_peak_all, diffs_stim_peak_all_n);
+    diffs_stim_peak_all_par = cat(1, diffs_stim_peak_all_par,diffs_stim_peak_all);
+    diffs_stim_peak_all_par_n = cat(1, diffs_stim_peak_all_par_n,ones(length(diffs_stim_peak_all),1)*i_file);
     set(gca, 'XTickLabel', {"Slow" "Fast"});
     ylabel("Time from peak to stim (sec)");
     
@@ -305,6 +311,7 @@ for i_file=1:n_files
     % Plot the performance of the task (Stimulation of correct movements)
     subplot(2,4,8);
     perf = round(perf,0);
+    perfs_all = cat(3, perfs_all, perf(:,[2,3]));
     b = bar(perf);
     ylabel("Percentage");
     set(b, {'DisplayName'}, {'Stimulated','Sensitivity','Specificity'}')
@@ -322,8 +329,18 @@ for i_file=1:n_files
     
     % Save the figure 
     %saveas(FigH, sprintf('../../Plots/Dataset%i.png', i_file), 'png');
-
+    close all;
 end
+
+%% %% All datasets plot task accuracy
+figure;
+bar(squeeze(mean(perfs_all,[1,2])));
+ylim([60,105]);
+
+%% All datasets barplot time between peak
+figure;
+h = boxplot(diffs_stim_peak_all_par, diffs_stim_peak_all_par_n, 'Color','k');
+set(h,'LineWidth',2)
 
 %% All datasets Velocity Start End stimulation recovery plot
 FigA = figure('Position', get(0, 'Screensize')); 
@@ -340,10 +357,10 @@ set(gca, 'XTick', 1:4, 'XTickLabels', {'5-15 Stim', '85-95 Stim', 'Recov', 'Reco
 
 
 %% All datasets correlation 
-subplot(1,3,2);
-boxplot([corrs(1:2:end); corrs(2:2:end)],[ones(10,1);ones(10,1)*2]);
-set(gca, 'XTickLabel', {"Slow" "Fast"});
-ylabel("Correlation coefficient");
+% subplot(1,3,2);
+% boxplot([corrs(1:2:end); corrs(2:2:end)],[ones(10,1);ones(10,1)*2]);
+% set(gca, 'XTickLabel', {"Slow" "Fast"});
+% ylabel("Correlation coefficient");
 
 %% All datasets Next three trials plot
 subplot(1,3,3);
@@ -363,4 +380,4 @@ end
 legend(["Slow" "Fast no stim" "Fast" "Slow no stim"]);
 ylabel("Av. difference of peak velocity to stim trial");
 xlabel("Trial number after stim");
-saveas(FigA, '../../Plots/AllDatasets.png');
+%saveas(FigA, '../../Plots/AllDatasets.png');

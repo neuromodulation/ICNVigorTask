@@ -7,7 +7,7 @@
 % 3. Time of stimulation is close to true peak 
 
 % Load the data from one participant
-[filename,path] = uigetfile('Data\');
+[filename,path] = uigetfile('..\..\.. \Data\');
 load(strcat(path,filename));
 data = struct.data; 
 options = struct.options;
@@ -85,7 +85,7 @@ for i_cond=1:n_cond
         end
     end
     % If needed, fill the outliers of the data
-    % peaks = filloutliers(peaks,"linear");
+    peaks = filloutliers(peaks,"linear");
     
     % Save the peak velocities for one condition 
     peaks_all = cat(2,peaks_all, peaks);

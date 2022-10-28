@@ -1,7 +1,9 @@
 %% Append new peak data to matrix
 
+clear all; 
+
 % Load the data from one participant
-[filename,path] = uigetfile('Data\');
+[filename,path] = uigetfile('..\..\..\Data\new task data');
 load(strcat(path,filename));
 data = struct.data; 
 options = struct.options;
@@ -48,14 +50,14 @@ end
 
 % Append to old data 
 % Load the data from one participant
-[filename,path] = uigetfile('Data\');
+[filename,path] = uigetfile('..\..\..\Data');
 load(strcat(path,filename));
 peaks_all_raw = cat(3, peaks_all_raw, peaks_all); 
 
 % Plot for visual inspection 
 figure;
 for i_file=1:size(peaks_all_raw,3)
-    subplot(2,8,i_file);
+    subplot(2,11,i_file);
     plot(peaks_all_raw(:,:,i_file));
 end
 

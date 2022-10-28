@@ -28,9 +28,11 @@ addpath ..\wjn_toolbox
 
 
 %% All patients
-clear all, close all
-load peak_velocities_raw.mat
-ipat = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15];
+clear all, %close all
+load '..\..\..\Data\peak_velocities_raw.mat'
+ipat = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21];
+%ipat = [11 12 13 14 15];
+%ipat = [1 2 3 4 5 6 7 8 9 10];
 cmap = wjn_erc_colormap
 col_fast = [0.4940, 0.1840, 0.5560];
 col_slow = [0.4660, 0.6740, 0.1880];
@@ -135,7 +137,7 @@ figone(10,20)
 %%
 
 %% All sessions
-clear all, close all
+clear all, %close all
 cmap = wjn_erc_colormap
 load peak_velocities_raw.mat
 ipat = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15];
@@ -233,14 +235,14 @@ sigbracket('p=0.07',2,900,9)
 ylim([-1300 1300])
 legend([b1(1) b2(1)],{'Fast','Slow'},'Location','NorthEastOutside')
 figone(7,10)
-title({['N = ' num2str(size(fast_block,1)) ' sessions from 6 PD patients'],'Movement velocity adapted DBS'})
+title({['N = ' num2str(size(fast_block,1)) ' sessions from 10 PD patients'],'Movement velocity adapted DBS'})
 
 figone(7,40)
 myprint('one_session_per_patient')
 %% One session per patient
-clear all, close all
+clear all, %close all
 load peak_velocities_raw.mat
-ipat = [1 2 3  6 7 9 11 12 14 15];
+ipat = [1 2 3  6 7 9 11 12 14 15 16];
 cmap = wjn_erc_colormap;
 col_fast = [0.4940, 0.1840, 0.5560];
 col_slow = [0.4660, 0.6740, 0.1880];
@@ -334,13 +336,14 @@ xlim([.5 4.5])
 set(gca,'XTickLabels',{'1st 1/2','2nd 1/2','1st 1/2','2nd half'})
 xlabel('Stimulation block         Recovery block')
 ylabel('\Delta Velocity [p/s]')
-sigbracket('p=0.04',2,900,9)
-sigbracket('p=0.01',4,1350,9)
-sigbracket('p=0.01',3,1350,9)
+sigbracket('p=0.046',1,900,9)
+sigbracket('p=0.047',2,900,9)
+sigbracket('p=0.044',4,1350,9)
+sigbracket('p=0.044',3,1350,9)
 ylim([-1700 1700])
 legend([b1(1) b2(1)],{'Fast','Slow'},'Location','NorthEastOutside')
 
-title({['N = ' num2str(size(fast_block,1)) ' sessions from 6 PD patients'],'Movement velocity adapted DBS'})
+title({['N = ' num2str(size(fast_block,1)) ' sessions from 11 PD patients'],'Movement velocity adapted DBS'})
 
 figone(7,40)
 myprint('one_session_per_patient')
@@ -354,13 +357,19 @@ writetable(mT,'Vigorstim_6pat_mean.csv')
 
 %% One session per patient / printed as percentage
 clear all, close all
-load peak_velocities_raw.mat
-ipat = [1 2 3  6 7 9 ];
+%ipat = [1 2 3 6 7 9 11 12 14 15 16];
+load '..\..\..\Data\peak_velocities_raw.mat'
+%ipat = [1 2 3 6 7 9 11 12 14 15 16 17 18 19 20];
+ipat = [10 11 12 14 15 16 17 18 19 20];
+%ipat = [1 2 3 6 7 9];
+%ipat = [17 18 19 20];
+%ipat = [20];
+
 cmap = wjn_erc_colormap;
-col_fast = [0.4940, 0.1840, 0.5560];
-col_slow = [0.4660, 0.6740, 0.1880];
-col_fast = cmap(2,:);
-col_slow = cmap(1,:);
+col_fast = [60, 41, 118]/255;
+col_slow = [99, 118, 41]/255;
+%col_fast = cmap(2,:);
+%col_slow = cmap(1,:);
 
 nr=5;
 sk=5;
@@ -401,26 +410,29 @@ tr = size(sfs,2)+1:size(sfs,2)+size(sfr,2);
 
 
 figure
-subplot(1,3,1)
+subplot(1,2,1)
 mypower(ts,psfs,[0.4940, 0.1840, 0.5560],'sem')
 hold on 
 yline(0, "LineWidth", 1.5)
-ylim([-30 30])
+%ylim([-20 20])
 hold on
 mypower(ts,psss,col_slow,'sem')
 %sigbar(ts,astim<=0.05)
 mypower(ts,psfs,col_fast,'sem')
 hold on
 mypower(ts,psss,col_slow,'sem')
-title('Stimulation')
+%title('Stimulation')
 box off
+ax = gca;
+ax.FontSize = 16; 
 ylabel('\Delta Movement speed [%]')
 xlabel('Trial')
 
-subplot(1,3,2)
+subplot(1,2,2)
+%figure;
 mypower(tr,psfr,col_fast,'sem')
 hold on
-ylim([-30 30])
+%ylim([-20 20])
 mypower(tr,pssr,col_slow,'sem')
 hold on 
 yline(0, "LineWidth", 1.5)
@@ -428,16 +440,18 @@ yline(0, "LineWidth", 1.5)
 mypower(tr,psfr,col_fast,'sem')
 hold on
 mypower(tr,pssr,col_slow,'sem')
-title('No Stimulation (Recovery)')
+%title('No Stimulation (Recovery)')
 box off
+ax = gca;
+ax.FontSize = 16; 
 set(gca,'YTick',[])
 xlabel('Trial')
 
 % myprint('one_session_per_patient')
 
 ib = [1:size(pssr,2)./2 ;1+size(pssr,2)./2:size(pssr,2)];
-fast_block = [nanmean(psfs(:,ib(1,:)),2) nanmean(psfs(:,ib(2,:)),2) nanmean(psfr(:,ib(1,:)),2) nanmean(psfr(:,ib(1,:)),2)];
-slow_block = [nanmean(psss(:,ib(1,:)),2) nanmean(psss(:,ib(2,:)),2) nanmean(pssr(:,ib(1,:)),2) nanmean(pssr(:,ib(1,:)),2)];
+fast_block = [nanmean(psfs(:,ib(1,:)),2) nanmean(psfs(:,ib(2,:)),2) nanmean(psfr(:,ib(1,:)),2) nanmean(psfr(:,ib(2,:)),2)];
+slow_block = [nanmean(psss(:,ib(1,:)),2) nanmean(psss(:,ib(2,:)),2) nanmean(pssr(:,ib(1,:)),2) nanmean(pssr(:,ib(2,:)),2)];
 
 for a = 1:4
     p0f(1,a) = wjn_pt(fast_block(:,a));
@@ -447,7 +461,10 @@ end
   
 
 
-subplot(1,3,3)
+%subplot(1,3,3)
+figure;
+ax = gca;
+ax.FontSize = 16; 
 b1=mybar(fast_block,col_fast,[1:4]-.1,.25);
 hold on 
 b2=mybar(slow_block,col_slow,[1:4]+.1,.25);
@@ -455,20 +472,23 @@ xlim([.5 4.5])
 set(gca,'XTickLabels',{'1st 1/2','2nd 1/2','1st 1/2','2nd half'})
 xlabel('Stimulation block         Recovery block')
 ylabel('\Delta Speed [%]')
-sigbracket('p=0.04',2,18,9)
-sigbracket('p=0.01',4,24,9)
-sigbracket('p=0.01',3,24,9)
-ylim([-30 30])
+sigbracket(sprintf('p=%.3f',psf(1)),1,12,9)
+sigbracket(sprintf('p=%.3f',psf(2)),2,12,9)
+sigbracket(sprintf('p=%.3f',psf(3)),3,12,9)
+sigbracket(sprintf('p=%.3f',psf(4)),4,12,9)
+ax = gca;
+ax.FontSize = 16; 
+ylim([-20 20])
 legend([b1(1) b2(1)],{'Fast','Slow'},'Location','NorthEastOutside')
 
-title({['N = ' num2str(size(fast_block,1)) ' sessions from 6 PD patients'],'Movement velocity adapted DBS'})
+%title({['N = ' num2str(size(fast_block,1)) ' sessions from 11 PD patients'],'Movement velocity adapted DBS'})
 
-figone(7,40)
+%figone(7,50)
 myprint('perc_one_session_per_patient')
 %% Off sessions only
-clear all, close all
+clear all, %close all
 load peak_velocities_raw.mat
-ipat = [1 2 3  7 9 ];%12 14 15];
+ipat = [1 2 3  7 9 12 14 15];
 cmap = wjn_erc_colormap
 col_fast = [0.4940, 0.1840, 0.5560];
 col_slow = [0.4660, 0.6740, 0.1880];
@@ -569,7 +589,7 @@ sigbracket('p=0.007',3,1450,9)
 sigbracket('p=0.007',4,1450,9)
 ylim([-1900 1900]/2)
 legend([b1(1) b2(1)],{'Fast','Slow'},'Location','NorthEastOutside')
-title({['N = ' num2str(size(fast_block,1)) ' OFF sessions from 5 PD patients'],'Movement velocity adapted DBS'})
+title({['N = ' num2str(size(fast_block,1)) ' OFF sessions from 8 PD patients'],'Movement velocity adapted DBS'})
 
 figone(7,40)
 myprint('OFF_sessions_only_T-Tests')
