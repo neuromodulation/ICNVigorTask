@@ -1,43 +1,38 @@
 # Script to plot the velocity of one dataset
+# TODO Plot average speed --> until museum
+# After museum: Start new analysis and do list 
 
 import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import easygui
-from ICNVigorTask.utils.utils import reshape_data_trials
+from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed
 
 # Load the dataset of interest
-filename_neuro = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\Archive\\archive_ICN_data\\Parkinson_Pilot\\Neuro data\\sub-06-MedOff-task-VigorStim-R-Fast-Slow-StimOn-run-01-neuro\sub-008_ses-EphysMedOff01_task-VigorStimR_acq-StimOn_run-01_ieeg_behav.vhdr"
+filename_neuro = 'D:\\rawdata\\rawdata\\sub-015\\sub-015\\ses-EcogLfpMedOn01\\ieeg\\sub-015_ses-EcogLfpMedOn01_task-VigorStimR_acq-StimOnB_run-1_ieeg_behav.vhdr'
 #filename_neuro = easygui.fileopenbox(default="*.vhdr")
 raw_data = mne.io.read_raw_brainvision(filename_neuro, preload=True)
 
-# Determine the condition based on the filename
-slow_first = 1 if filename_neuro.index("Slow") < filename_neuro.index("Fast") else 0
-
-# Get the channel index of the mean velocity values
-mean_vel_idx = raw_data.info["ch_names"].index("mean_vel")
+# Get the channel index of the mean speed values
+mean_speed_idx = raw_data.info["ch_names"].index("mean_vel")
 
 # Structure data in trials and blocks
-data = reshape_data_trials(raw_data, slow_first)
+data = reshape_data_trials(raw_data)
 
-# Extract the peak velocity of all trials
-peak_vels = np.max(data[:, :, :, mean_vel_idx, :], axis=3)
+# Extract the peak speed of all trials
+peak_speed = np.max(data[:, :, :, mean_speed_idx, :], axis=3)
+
+# Normalize them to the start speed
+peak_speed = norm_speed(peak_speed)
 
 # Print the peak velocities
-plt.plot(peak_vels[0, :, :].flatten(), label="slow")
-plt.plot(peak_vels[1, :, :].flatten(), label="fast")
+#plt.plot(peak_speed[0, :, :].flatten(), label="slow")
+#plt.plot(peak_speed[1, :, :].flatten(), label="fast")
+#plt.legend()
+#plt.show()
+
+# Smooth the speed values
+peak_speed_smooth = smooth_moving_average(peak_speed)
+plot_speed(peak_speed_smooth)
 plt.legend()
 plt.show()
-print("h")
-
-# Normalize peak velocities
-peak_vels_norm = peak_vels - np.mean(peak_vels[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
-plt.plot(peak_vels_norm[0, :, :].flatten(), label="slow")
-plt.plot(peak_vels_norm[1, :, :].flatten(), label="fast")
-plt.legend()
-plt.show()
-
-# DONE: I can really start next week
-# TODO: Put together data this weekend
-# Monday: Write list for analysis
-# Python is ready
