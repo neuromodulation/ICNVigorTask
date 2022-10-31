@@ -16,6 +16,14 @@ def norm_speed(array):
     return array_norm
 
 
+def norm_perf_speed(array):
+    """Normalize speed to stimulation block start and return as percentage
+    array: (2x2x96)(Conditions, Blocks, Trials)"""
+    mean_start = np.mean(array[:, 0, :5], axis=1)[:, np.newaxis, np.newaxis]
+    array_norm = ((array - mean_start) / mean_start) * 100
+    return array_norm
+
+
 def reshape_data_trials(raw_data):
     """Gives back the data in a array format reshaped in trials
     shape (2x2x96xn_chansx50000)(Conditions, Blocks, Trials, Channels, Time samples)
@@ -42,7 +50,7 @@ def reshape_data_trials(raw_data):
 def smooth_moving_average(array, window_size=5):
     """Return the smoothed array where values are averaged in a moving window"""
     box = np.ones(window_size) / window_size
-    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='same'), axis=2, arr=array)
+    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='valid'), axis=2, arr=array)
     return array_smooth
 
 
@@ -52,7 +60,8 @@ def plot_speed(speed_array):
 
 
 def fill_outliers(array):
-    idx_outlier = np.where(zscore(array, axis=2) > 3)
+    idx_outlier = np.where(zscore(array) > 3)[0]
     for idx in idx_outlier:
-        array[idx] = np.mean([array[idx-1],array[idx+1]])
+        if idx < array.shape[0]-1:
+            array[idx] = np.mean([array[idx-1], array[idx+1]])
     return array

@@ -1,5 +1,6 @@
 # Script to plot the velocity of one dataset
 # TODO
+# Percentage of velocity decrease
 # After museum: Start new analysis and do list
 
 import numpy as np
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 import mne
 import easygui
 import os
-from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, fill_outliers
+from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, fill_outliers, norm_perf_speed
 
 # Set analysis parameters
 plot_individual = True
@@ -40,11 +41,11 @@ for file in files_list:
     # Extract the peak speed of all trials
     peak_speed = np.max(data[:, :, :, mean_speed_idx, :], axis=3)
 
-    # Normalize them to the start speed
-    peak_speed = norm_speed(peak_speed)
-
     # Detect and fill outliers (e.g. when subject did not touch the screen)
-    peak_speed = fill_outliers(peak_speed)
+    x = np.apply_along_axis(lambda m: fill_outliers(m), axis=2, arr=peak_speed)
+
+    # Normalize them to the start speed
+    peak_speed = norm_perf_speed(peak_speed)
 
     # Plot if needed
     if plot_individual:
@@ -57,7 +58,7 @@ for file in files_list:
     peak_speed_all.append(peak_speed)
 
 # Average over all datasets
-peak_speed_all = np.array(peak_speed_all)
+peak_speed_all = np.array(peak_speed_all[0,1,2,3])
 mean_peak_speed = np.mean(peak_speed_all, axis=0)
 # Plot
 plt.figure()
