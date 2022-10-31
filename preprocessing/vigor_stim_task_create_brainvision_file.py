@@ -10,13 +10,13 @@ from ICNVigorTask.utils.utils import norm_0_1
 # Add synchronized behavioral data to brain vision file
 
 # Load the TMSi data
-#filename_neuro = easygui.fileopenbox(default="*.vhdr")
-filename_neuro = "D:\\rawdata\\rawdata\\sub-015\\sub-015\\ses-EcogLfpMedOn01\\ieeg\\sub-015_ses-EcogLfpMedOn01_task-VigorStimR_acq-StimOnB_run-1_ieeg.vhdr"
+filename_neuro = easygui.fileopenbox(default="*.vhdr")
+#filename_neuro = "D:\\rawdata\\rawdata\\sub-015\\sub-015\\ses-EcogLfpMedOn01\\ieeg\\sub-015_ses-EcogLfpMedOn01_task-VigorStimR_acq-StimOnB_run-1_ieeg.vhdr"
 raw_data = mne.io.read_raw_brainvision(filename_neuro, preload=True)
 
 # Load the MATLAB data
-#filename_behav = easygui.fileopenbox(default="*.mat")
-filename_behav = "D:\\rawdata\\rawdata\\sub-015\\sub-014-MedOn-task-VigorStim-R-Fast-Slow-StimOn-run-01-behavioral.mat"
+filename_behav = easygui.fileopenbox(default="*.mat")
+#filename_behav = "D:\\rawdata\\rawdata\\sub-015\\sub-014-MedOn-task-VigorStim-R-Fast-Slow-StimOn-run-01-behavioral.mat"
 behav_data = loadmat(filename_behav)
 # Extract the behavioral data stored in a matrix
 behav_data = behav_data["struct"][0][0][1]
