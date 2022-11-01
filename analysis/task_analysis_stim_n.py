@@ -23,8 +23,8 @@ for subject_folder in folder_list:
                 files_list.append(os.path.join(root, file))
 
 # Plot the speed of all datasets
-peak_speed_all = []
-peak_speed_cum_all = []
+n_stim_slow = []
+n_stim_fast = []
 for file in files_list:
 
     # Load the dataset of interest
@@ -35,9 +35,27 @@ for file in files_list:
     data = reshape_data_trials(raw_data)
     stim_data = data[:, 0, :, stim_idx, :]
     stim = np.any(stim_data, axis=2)
-    slow_idx = np.where(stim[0, :])
-    fast_idx = np.where(stim[1, :])
-    plt.hist(slow_idx, bins=10, label="Slow")
-    plt.hist(fast_idx, bins=10, label="Fast")
-    plt.legend()
-    print("END")
+    bins = 10
+    slow = [np.sum(arr) for arr in np.array_split(stim[0, :], bins)]
+    fast = [np.sum(arr) for arr in np.array_split(stim[1, :], bins)]
+
+    if plot_individual:
+        plt.figure()
+        plt.plot(slow, label="Slow")
+        plt.plot(fast, label="Fast")
+        plt.title(file.split("\\")[-1])
+        plt.legend()
+
+    # Save in array
+    n_stim_slow.append(slow)
+    n_stim_fast.append(fast)
+
+# Average
+slow_mean = np.mean(np.array(n_stim_slow), axis=0)
+fast_mean = np.mean(np.array(n_stim_fast), axis=0)
+plt.figure()
+plt.plot(slow_mean, label="Slow")
+plt.plot(fast_mean, label="Fast")
+plt.title("Average")
+plt.legend()
+plt.show()
