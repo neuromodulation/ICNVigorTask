@@ -32,6 +32,11 @@ time_array_neuro = raw_data.times.flatten()
 # Get a LFP channel based on which stimulation onset is determined
 # based on saved bads?
 # FIX THIS
+# Average all of them
+# Low pass filter them
+data_tmp = raw_data._data[:10,:]
+data_tmp = mne.filter.filter_data(data_tmp, 500, 2, 200)
+
 target_chan_name = "LFP_L_05_STN_MT"
 target_chan = raw_data.get_data([target_chan_name]).flatten()
 
