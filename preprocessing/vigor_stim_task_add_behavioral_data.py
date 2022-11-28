@@ -7,10 +7,13 @@ from scipy.stats import zscore
 import numpy as np
 import pandas as pd
 import os
+import json
 from ICNVigorTask.utils.utils import norm_0_1
 
 # Get list of all brainvision and matlab datasets
-path = "D:\\raw_data\\"
+type = "VigorStim"
+
+path = "D:\\rawdata\\rawdata\\"
 folder_list = os.listdir(path)
 files_raw_list = []
 files_mat_list = []
@@ -19,22 +22,25 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and "VigorStim" in file:
+            if (file.endswith(".vhdr")) and type in file and "new" not in file:
                 files_raw_list.append(os.path.join(root, file))
-                # Add matlab file
+                # Add matlab file with correct hand
+                hand = "R" if "R" in file else "L"
+                run = "run-01" if "run-1" in file else "run-02"
                 for file in os.listdir(root):
-                    if file.endswith(".mat"):
+                    if file.endswith(".mat") and hand in file and run in file:
                         files_mat_list.append(os.path.join(root, file))
 
 
 # Loop through all Vigor Stim datasets and add matlab data to brainvision file
+#files_raw_list = files_raw_list[2:]
+#files_mat_list = files_mat_list[2:]
 for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
 
     # Load the TMSi data
-    raw_data = mne.io.read_raw_brainvision(filename_raw preload=True)
+    raw_data = mne.io.read_raw_brainvision(filename_raw, preload=True)
 
     # Load the MATLAB data
-
     behav_data = loadmat(filename_mat)
     # Extract the behavioral data stored in a matrix
     behav_data = behav_data["struct"][0][0][1]
@@ -42,7 +48,8 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     slow_first = 1 if filename_mat.index("Slow") < filename_mat.index("Fast") else 0
 
     # Downsample the neuro data to 500 Hz
-    raw_data.resample(500)
+    new_sfreq = 500
+    raw_data.resample(new_sfreq)
 
     # Get the times of the samples
     time_array_neuro = raw_data.times.flatten()
@@ -115,14 +122,13 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     plt.figure()
     plt.plot(raw_data.get_data(["STIMULATION"]).T)
     plt.plot(norm_0_1(data_mean))
-    plt.show()
 
     # Save new brain vision file
     filename_new = filename_raw[:-5] + "_new.vhdr"
     mne.export.export_raw(fname=filename_new, raw=raw_data, fmt="brainvision", overwrite=True)
 
     # Add channels to corresponding tsv file
-    tsv_filename = filename_raw[:-4]+"tsv"
+    tsv_filename = filename_raw[:-9]+"channels.tsv"
     tsv_file = pd.read_csv(tsv_filename, sep='\t')
     template = tsv_file.loc[len(tsv_file)-1]
     template[-1] = "Task"
@@ -132,12 +138,26 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
         new_row[0] = ch_name
         tsv_file = tsv_file.append(new_row)
     # Update the sampling frequency
-    tsv_file.sampling_frequency = np.ones(len(tsv_file)) * 500
-    tsv_file.high_cutoff = np.ones(len(tsv_file)) * 250
+    tsv_file.sampling_frequency = np.ones(len(tsv_file)) * new_sfreq
+    tsv_file.high_cutoff = np.ones(len(tsv_file)) * (new_sfreq / 2)
     # Save updated tsv file
     with open(tsv_filename[:-4]+"_new.tsv",'w') as write_tsv:
         write_tsv.write(tsv_file.to_csv(sep='\t', index=False))
 
+    # Update corresponding json file
+    json_filename = filename_raw[:-4] + "json"
+    with open(json_filename, 'r') as f:
+        json_file = json.load(f)
+    # Adjust parameters accordingly
+    json_file["ElectricalStimulationParameters"]["CurrentExperimentalSetting"]["StimulationMode"] = "adaptive"
+    json_file["ElectricalStimulationParameters"]["CurrentExperimentalSetting"]["StimulationParadigm"] = "adaptive stimulation"
+    json_file["SamplingFrequency"] = new_sfreq
+    # Save
+    with open(json_filename[:-5]+"_new.json", 'w') as f:
+        json.dump(json_file, f)
+
     print(f"Successfully added behavioral data to {filename_raw}")
-    
+
+    plt.show()
     plt.close()
+#plt.show()

@@ -13,7 +13,7 @@ plot_individual = True
 med = "MedOn"  #"MedOff"
 
 # Get list of all datasets
-path = "D:\\raw_data\\"
+path = "D:\\rawdata\\rawdata"
 folder_list = os.listdir(path)
 files_list = []
 # Loop over every subject
@@ -21,7 +21,8 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and "VigorStim" in file and med in file:
+            #if (file.endswith(".vhdr")) and "VigorStim" in file and med in file and "new":
+            if (file.endswith(".vhdr")) and "Rest" in file and med in file:
                 files_list.append(os.path.join(root, file))
 
 # Plot the speed of all datasets
@@ -60,7 +61,6 @@ for file in files_list:
         plot_speed(peak_speed_cum)
         plt.legend()
         plt.suptitle(file.split("\\")[-1])
-        #plt.show()
 
     # Save the speed values for all datasest
     peak_speed_all.append(peak_speed)
@@ -71,6 +71,7 @@ peak_speed_all = np.array(peak_speed_all)
 mean_peak_speed = np.mean(peak_speed_all, axis=0)
 peak_speed_cum_all = np.array(peak_speed_cum_all)
 mean_peak_speed_cum = np.mean(peak_speed_cum_all, axis=0)
+
 # Plot
 plt.figure()
 plt.subplot(1,2,1)
