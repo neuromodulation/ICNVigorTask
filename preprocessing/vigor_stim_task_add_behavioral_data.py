@@ -10,13 +10,13 @@ from ICNVigorTask.utils.utils import norm_0_1
 # Add synchronized behavioral data to brain vision file
 
 # Load the TMSi data
-filename_neuro = easygui.fileopenbox(default="*.vhdr")
-#filename_neuro = "D:\\rawdata\\rawdata\\sub-015\\sub-015\\ses-EcogLfpMedOn01\\ieeg\\sub-015_ses-EcogLfpMedOn01_task-VigorStimR_acq-StimOnB_run-1_ieeg.vhdr"
+#filename_neuro = easygui.fileopenbox(default="*.vhdr")
+filename_neuro = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\Archive\\archive_ICN_data\\Parkinson_Pilot\\Neuro data\\sub-06-MedOff-task-VigorStim-R-Fast-Slow-StimOn-run-01-neuro\\sub-008_ses-EphysMedOff01_task-VigorStimR_acq-StimOn_run-01_ieeg.vhdr"
 raw_data = mne.io.read_raw_brainvision(filename_neuro, preload=True)
 
 # Load the MATLAB data
-filename_behav = easygui.fileopenbox(default="*.mat")
-#filename_behav = "D:\\rawdata\\rawdata\\sub-015\\sub-014-MedOn-task-VigorStim-R-Fast-Slow-StimOn-run-01-behavioral.mat"
+#filename_behav = easygui.fileopenbox(default="*.mat")
+filename_behav = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\Archive\\archive_ICN_data\\Parkinson_Pilot\\sub-06-MedOff-task-VigorStim-R-Fast-Slow-StimOn-run-01_behavioral.mat"
 behav_data = loadmat(filename_behav)
 # Extract the behavioral data stored in a matrix
 behav_data = behav_data["struct"][0][0][1]
@@ -29,28 +29,23 @@ raw_data.resample(500)
 # Get the times of the samples
 time_array_neuro = raw_data.times.flatten()
 
-# Get a LFP channel based on which stimulation onset is determined
-# based on saved bads?
-# FIX THIS
-# Average all of them
-# Low pass filter them
-data_tmp = raw_data._data[:10,:]
-data_tmp = mne.filter.filter_data(data_tmp, 500, 2, 200)
+# Determine stimulation onset base don LFP channels
 
-target_chan_name = "LFP_L_05_STN_MT"
-target_chan = raw_data.get_data([target_chan_name]).flatten()
+# Filter the data
+raw_data_filt = raw_data.copy().filter(l_freq=2, h_freq=200)
+# Average first 10 channels (cut out the last 100 samples because of end artifact)
+data_mean = np.mean(raw_data_filt._data[:10,:-1000], axis=0)
 
 # Plot for visual inspection
-plt.plot(target_chan)
-plt.show()
+plt.figure()
+plt.plot(data_mean)
 
 # Find the first sample above a threshold
-idx_onset_neuro = np.where(np.abs(zscore(target_chan[:-10])) > 3)[0][0]
+idx_onset_neuro = np.where(np.abs(zscore(data_mean)) > 2.5)[0][0]
 
 # Plot for visual inspection
-plt.plot(target_chan)
 plt.axvline(idx_onset_neuro, color="red")
-plt.show()
+#plt.show()
 
 # Find the first sample with stimulation in the behavioral data
 behav_data_stim = behav_data[:, 10].flatten()
@@ -66,11 +61,12 @@ diff_time = time_onset_neuro - time_onset_behav
 time_array_neuro = time_array_neuro - diff_time
 
 # Get indexes of stimulation onset in behav data and visually check the alignment
+plt.figure()
 idx_stim = np.where(np.diff(behav_data_stim) == 1)[0]
-plt.plot(time_array_neuro, target_chan)
+plt.plot(time_array_neuro[:len(data_mean)], data_mean)
 for idx in idx_stim:
     plt.axvline(time_array_behav[idx], color="red")
-plt.show()
+#plt.show()
 
 # For every sample in the neuro data find the closest sample in the behav data
 n_cols = np.size(behav_data, 1)
@@ -92,18 +88,19 @@ behav_data_long = np.hstack((behav_data_long, np.array(cond)[:, np.newaxis]))
 behav_data_long = behav_data_long[:, [0,1,3,4,7,8,9,10,11,12,16]]
 
 # Add behavioral channels to the raw mne object
-ch_names = ["PEN_X", "PEN_Y", "SPEED_MEAN", "SPEED", "BLOCK", "TRIAL", "TARGET_X", "TARGET_Y", "TARGET", "STIMULATION", "STIM_CONDITION"]
+ch_names = ["PEN_X", "PEN_Y", "SPEED_MEAN", "SPEED", "BLOCK", "TRIAL", "TARGET", "STIMULATION", "TARGET_X", "TARGET_Y", "STIM_CONDITION"]
 info = mne.create_info(ch_names, raw_data.info['sfreq'], ["bio"]*len(ch_names))
 behav_raw = mne.io.RawArray(behav_data_long.T, info)
 raw_data.add_channels([behav_raw], force_update_info=True)
 
 # Final plot for visual inspection
-target_chans = raw_data.get_data([target_chan_name, "STIMULATION"])
-plt.plot(norm_0_1(target_chans[0, :-10]).T)
-plt.plot(target_chans[1,:-10].T)
+plt.figure()
+plt.plot(raw_data.get_data(["STIMULATION"]).T)
+plt.plot(norm_0_1(data_mean))
 plt.show()
 
 # Save new brain vision file
+filename_new = filename_neuro[:-5] + "_new.vhdr"
 mne.export.export_raw(fname=filename_neuro, raw=raw_data, fmt="brainvision", overwrite=True)
 
 # Add channels to corresponding tsv file
