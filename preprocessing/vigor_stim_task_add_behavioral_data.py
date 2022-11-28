@@ -33,8 +33,8 @@ for subject_folder in folder_list:
 
 
 # Loop through all Vigor Stim datasets and add matlab data to brainvision file
-#files_raw_list = files_raw_list[2:]
-#files_mat_list = files_mat_list[2:]
+files_raw_list = files_raw_list[6:]
+files_mat_list = files_mat_list[6:]
 for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
 
     # Load the TMSi data
