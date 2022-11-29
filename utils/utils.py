@@ -19,7 +19,7 @@ def norm_speed(array):
 def norm_perf_speed(array):
     """Normalize speed to stimulation block start and return as percentage
     array: (2x2x96)(Conditions, Blocks, Trials)"""
-    mean_start = np.mean(array[:, 0, :5], axis=1)[:, np.newaxis, np.newaxis]
+    mean_start = np.mean(array[:, 0, :10], axis=1)[:, np.newaxis, np.newaxis]
     array_norm = ((array - mean_start) / mean_start) * 100
     return array_norm
 
@@ -60,8 +60,10 @@ def plot_speed(speed_array):
 
 
 def fill_outliers(array):
-    idx_outlier = np.where(zscore(array) > 3)[0]
+    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
     for idx in idx_outlier:
         if idx < array.shape[0]-1:
             array[idx] = np.mean([array[idx-1], array[idx+1]])
+        else:
+            array[idx] = np.mean([array[idx - 1], array[idx -2]])
     return array

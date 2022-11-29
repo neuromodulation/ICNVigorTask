@@ -6,7 +6,7 @@
 
 %% Get a list of all datasets 
 close all; clear all;
-filenames = dir(fullfile('..\..\..\Data\all data modified\',"*.mat"));
+filenames = dir(fullfile('..\..\..\Data\behavioral_data\',"*.mat"));
 %filenames(1:10)=[];
 n_files = length(filenames);
 n_trials = 96;
@@ -24,7 +24,7 @@ start_end_vel = [];
 for i_file=1:n_files
     
     % Load the data from one recording
-    load(strcat('..\..\..\Data\all data modified\',filenames(i_file).name));
+    load(strcat('..\..\..\Data\behavioral_data\',filenames(i_file).name));
     data = struct.data; 
     options = struct.options; 
     
@@ -329,7 +329,7 @@ for i_file=1:n_files
     
     % Save the figure 
     %saveas(FigH, sprintf('../../Plots/Dataset%i.png', i_file), 'png');
-    close all;
+    %close all;
 end
 
 %% %% All datasets plot task accuracy
