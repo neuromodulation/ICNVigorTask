@@ -22,7 +22,7 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and type in file and "new" not in file:
+            if (file.endswith(".vhdr")) and type in file and "new" not in file and "EL012" in file:
                 files_raw_list.append(os.path.join(root, file))
                 # Add matlab file with correct hand
                 hand = "R" if "R" in file else "L"
@@ -33,8 +33,8 @@ for subject_folder in folder_list:
 
 
 # Loop through all Vigor Stim datasets and add matlab data to brainvision file
-files_raw_list = files_raw_list[6:]
-files_mat_list = files_mat_list[6:]
+#files_raw_list = files_raw_list[13:]
+#files_mat_list = files_mat_list[13:]
 for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
 
     # Load the TMSi data
@@ -54,7 +54,7 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     # Get the times of the samples
     time_array_neuro = raw_data.times.flatten()
 
-    # Determine stimulation onset base don LFP channels
+    # Determine stimulation onset based on LFP channels
 
     # Filter the data
     raw_data_filt = raw_data.copy().filter(l_freq=2, h_freq=200)

@@ -31,12 +31,12 @@ def reshape_data_trials(raw_data):
     2 blocks per condition = 1 stimulation - 2 recovery
     96 trials per block
     50000 = standard trial length, filled with 0s if trial is shorter """
-    blocks = raw_data.get_data(["block"])
-    trials = raw_data.get_data(["trial"])
+    blocks = raw_data.get_data(["BLOCK"])
+    trials = raw_data.get_data(["TRIAL"])
     data = raw_data._data
     n_chans = data.shape[0]
     n_trials = int(np.max(trials))
-    data_trials = np.zeros((2, 2, n_trials, n_chans, 20000))
+    data_trials = np.zeros((2, 2, n_trials, n_chans, 43000))
     for i_block in range(1, 5):
         block_type = 0 if i_block in [1, 3] else 1
         for i_trial in range(1, n_trials+1):
