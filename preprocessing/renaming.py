@@ -23,7 +23,7 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and "VigorStim" in file and "neuro_behav." in file and "EL012" in file:
+            if (file.endswith(".vhdr")) and "VigorStim" in file and "ieeg_behav" in file and "L003" in file:
                 files_list.append(os.path.join(root, file))
 
 # Plot the speed of all datasets
@@ -31,7 +31,7 @@ for file in files_list:
     raw_data = mne.io.read_raw_brainvision(file, preload=True)
     # Rename
     # Load the dataset of interest
-    filename_new = file[:-11] + ".vhdr"
+    filename_new = file[:-15] + "desc-behav_ieeg.vhdr"
     mne.export.export_raw(fname=filename_new, raw=raw_data, fmt="brainvision", overwrite=True)
 
 

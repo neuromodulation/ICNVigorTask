@@ -55,8 +55,9 @@ def smooth_moving_average(array, window_size=5):
 
 
 def plot_speed(speed_array):
-    plt.plot(speed_array[0, :, 5:].flatten(), label="slow")
-    plt.plot(speed_array[1, :, 5:].flatten(), label="fast")
+    # Plot without the first 5 movements
+    plt.plot(speed_array[0, :, :].flatten()[5:], label="slow")
+    plt.plot(speed_array[1, :, :].flatten()[5:], label="fast")
 
 
 def fill_outliers(array):

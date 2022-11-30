@@ -124,7 +124,7 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     plt.plot(norm_0_1(data_mean))
 
     # Save new brain vision file
-    filename_new = filename_raw[:-5] + "_new.vhdr"
+    filename_new = filename_raw[:-5] + "_neuro_behav.vhdr"
     mne.export.export_raw(fname=filename_new, raw=raw_data, fmt="brainvision", overwrite=True)
 
     # Add channels to corresponding tsv file
@@ -141,7 +141,7 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     tsv_file.sampling_frequency = np.ones(len(tsv_file)) * new_sfreq
     tsv_file.high_cutoff = np.ones(len(tsv_file)) * (new_sfreq / 2)
     # Save updated tsv file
-    with open(tsv_filename[:-4]+"_new.tsv",'w') as write_tsv:
+    with open(tsv_filename[:-4]+"_neuro_behav.tsv",'w') as write_tsv:
         write_tsv.write(tsv_file.to_csv(sep='\t', index=False))
 
     # Update corresponding json file
@@ -153,7 +153,7 @@ for filename_raw, filename_mat in zip(files_raw_list, files_mat_list):
     json_file["ElectricalStimulationParameters"]["CurrentExperimentalSetting"]["StimulationParadigm"] = "adaptive stimulation"
     json_file["SamplingFrequency"] = new_sfreq
     # Save
-    with open(json_filename[:-5]+"_new.json", 'w') as f:
+    with open(json_filename[:-5]+"_neuro_behav.json", 'w') as f:
         json.dump(json_file, f)
 
     print(f"Successfully added behavioral data to {filename_raw}")
