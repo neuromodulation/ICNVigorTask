@@ -63,7 +63,7 @@ subject = 'EL006'
 # Download one subject's data from each dataset
 bids_root = "D:\\rawdata\\rawdata\\" # op.join(op.dirname(sample.data_path()), dataset)
 subject = "EL006"
-bids_path = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task="VigorStim", description="neurobehav")
+bids_path = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task="VigorStimR", description="neurobehav")
 
 bids_path = BIDSPath(root=bids_root, suffix="ieeg_neuro_behav", subject=subject, task="VigorStim")
 
@@ -71,77 +71,6 @@ bids_path = BIDSPath(root=bids_root, suffix="ieeg_neuro_behav", subject=subject,
 # We can now retrieve a list of all MEG-related files in the dataset:
 
 print(bids_path.match())
-
-# %%
-# The returned list contains ``BIDSpaths`` of 3 files:
-# ``sub-pd6_ses-off_task-rest_channels.tsv``,
-# ``sub-pd6_ses-off_task-rest_events.tsv``, and
-# ``sub-pd6_ses-off_task-rest_eeg.bdf``.
-# The first two are so-called sidecar files that contain information on the
-# recording channels and experimental events, and the third one is the actual
-# data file.
-#
-# Prepare reading the data
-# ------------------------
-#
-# There is only one subject and one experimental task (``rest``).
-# Let's use this knowledge to create a new ``BIDSPath`` with
-# all the information required to actually read the EEG data. We also need to
-# pass a ``suffix``, which is the last part of the filename just before the
-# extension -- ``'channels'`` and ``'events'`` for the two TSV files in
-# our example, and ``'eeg'`` for EEG raw data. For MEG and EEG raw data, the
-# suffix is identical to the datatype, so don't let yourself be confused here!
-
-task = 'rest'
-suffix = 'eeg'
-
-bids_path = BIDSPath(subject=subject, session=session, task=task,
-                     suffix=suffix, datatype=datatype, root=bids_root)
-
-# %%
-# Now let's print the contents of ``bids_path``.
-
-print(bids_path)
-
-# %%
-# You probably noticed two things: Firstly, this looks like an ordinary string
-# now, not like the more-or-less neatly formatted output we saw before. And
-# secondly, that there's suddenly a filename extension which we never specified
-# anywhere!
-#
-# The reason is that when you call ``print(bids_path)``, ``BIDSPath`` returns
-# a string representation of ``BIDSPath.fpath``, which looks different. If,
-# instead, you simply typed ``bids_path`` (or ``print(repr(bids_path))``, which
-# is the same) into your Python console, you would get the nicely formatted
-# output:
-
-bids_path
-
-# %%
-# The ``root`` here is – you guessed it – the directory we passed via the
-# ``root`` parameter: the "home" of our BIDS dataset. The ``datatype``, again,
-# is self-explanatory. The ``basename``, on the other hand, is created
-# automatically based on the suffix and **BIDS entities**  we passed to
-# ``BIDSPath``: in our case, ``subject``, ``session`` and ``task``.
-#
-# .. note::
-#   There are many more supported entities, the most-commonly used among them
-#   probably being ``acquisition``. Please see
-#   :ref:`our introduction to BIDSPath <bidspath-example>` to learn more
-#   about entities, ``basename``, and ``BIDSPath`` in general.
-#
-# But what about that filename extension, now? ``BIDSPath.fpath``, which –
-# as you hopefully remember – is invoked when you run ``print(bids_path)`` –
-# employs some heuristics to auto-detect some missing filename components.
-# Omitting the filename extension in your script can make your code
-# more portable. Note that, however, you **can** explicitly specify an
-# extension too, by passing e.g. ``extension='.bdf'`` to ``BIDSPath``.
-
-# %%
-# Read the data
-# -------------
-#
-# Let's read the data! It's just a single line of code.
 
 raw = read_raw_bids(bids_path=bids_path, verbose=False)
 

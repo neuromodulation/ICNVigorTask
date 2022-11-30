@@ -33,7 +33,7 @@ def reshape_data_trials(raw_data):
     50000 = standard trial length, filled with 0s if trial is shorter """
     blocks = raw_data.get_data(["BLOCK"])
     trials = raw_data.get_data(["TRIAL"])
-    data = raw_data._data
+    data = raw_data.get_data()
     n_chans = data.shape[0]
     n_trials = int(np.max(trials))
     data_trials = np.zeros((2, 2, n_trials, n_chans, 43000))
