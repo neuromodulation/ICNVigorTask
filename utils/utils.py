@@ -12,14 +12,14 @@ def norm_speed(array):
     array: (2x2x96)(Conditions, Blocks, Trials)"""
     # Substract the mean of the first 5 movements in each stimulation block from the speed of the subsequent stimulation
     # and recovery block
-    array_norm = array - np.mean(array[:, 0, :5], axis=1)[:, np.newaxis, np.newaxis]
+    array_norm = array - np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
     return array_norm
 
 
 def norm_perf_speed(array):
     """Normalize speed to stimulation block start and return as percentage
     array: (2x2x96)(Conditions, Blocks, Trials)"""
-    mean_start = np.mean(array[:, 0, :10], axis=1)[:, np.newaxis, np.newaxis]
+    mean_start = np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
     array_norm = ((array - mean_start) / mean_start) * 100
     return array_norm
 
@@ -55,8 +55,8 @@ def smooth_moving_average(array, window_size=5):
 
 
 def plot_speed(speed_array):
-    plt.plot(speed_array[0, :, :].flatten(), label="slow")
-    plt.plot(speed_array[1, :, :].flatten(), label="fast")
+    plt.plot(speed_array[0, :, 5:].flatten(), label="slow")
+    plt.plot(speed_array[1, :, 5:].flatten(), label="fast")
 
 
 def fill_outliers(array):

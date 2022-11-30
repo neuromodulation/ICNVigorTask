@@ -1,5 +1,4 @@
-# Script for further analysis
-# Cumlative change in velocity
+# Script for change in speed over time (percentage & cumulative)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +22,7 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and "VigorStim" in file and "behav" in file:# and med in file:
+            if (file.endswith(".vhdr")) and "VigorStim" in file and "behav" in file and med in file:
                 files_list.append(os.path.join(root, file))
 
 # Plot the speed of all datasets
@@ -50,7 +49,7 @@ for file in files_list:
     np.apply_along_axis(lambda m: fill_outliers(m), axis=2, arr=peak_speed)
 
     # Normalize them to the start speed
-    peak_speed = norm_speed(peak_speed)
+    peak_speed = norm_perf_speed(peak_speed)
 
     # Compute the cumulative change in peak speed
     peak_speed_cum = np.cumsum(peak_speed, axis=2)
@@ -60,7 +59,7 @@ for file in files_list:
     if plot_individual:
         plt.figure()
         plt.subplot(1,2,1)
-        plot_speed(peak_speed)
+        plot_speed(smooth_moving_average(peak_speed))
         plt.subplot(1,2,2)
         plot_speed(peak_speed_cum)
         plt.legend()
