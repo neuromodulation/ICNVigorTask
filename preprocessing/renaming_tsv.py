@@ -11,10 +11,6 @@ from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_mov
     fill_outliers, norm_perf_speed, norm_0_1
 import pandas as pd
 
-# Set analysis parameters
-plot_individual = True
-med = "MedOff"
-
 # Get list of all datasets
 path = "D:\\rawdata\\rawdata\\"
 folder_list = os.listdir(path)

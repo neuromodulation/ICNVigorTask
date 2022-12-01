@@ -12,9 +12,6 @@ from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_mov
 import pandas as pd
 import json
 
-# Set analysis parameters
-plot_individual = True
-med = "MedOff"
 
 # Get list of all datasets
 path = "D:\\rawdata\\rawdata\\"

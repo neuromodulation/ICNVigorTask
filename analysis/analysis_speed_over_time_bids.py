@@ -11,7 +11,7 @@ from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_mov
     fill_outliers, norm_perf_speed, norm_0_1
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 
-bids_root = "D:\\rawdata\\rawdata\\" # op.join(op.dirname(sample.data_path()), dataset)
+bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\" # op.join(op.dirname(sample.data_path()), dataset)
 
 # Set analysis parameters
 plot_individual = True
@@ -23,10 +23,20 @@ peak_speed_all = []
 peak_speed_cum_all = []
 for subject in subject_list:
 
-    bids_path = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task="VigorStimR", description="neurobehav")
+    # Read one dataset from every participant
+    for task_name in ["VigorStimR", "VigorStimL"]:
+        if subject in ["EL012", "L001"]:
+            bids_match = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task=task_name, description="behav").match()
+        else:
+            bids_match = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task=task_name, description="neurobehav").match()
+        if len(bids_match) > 0:
+            file_path = bids_match[1]
+            # Loop through dataset to get the Off dataset
+            for bids_m in bids_match[1::2]:
+                if "Off" in bids_m.basename:
+                    file_path = bids_m
 
     # Load the dataset of interest
-    file_path = bids_path.match()[1]
     raw = read_raw_bids(bids_path=file_path, verbose=False)
 
     # Get the channel index of the mean speed values
@@ -59,7 +69,7 @@ for subject in subject_list:
         plt.subplot(1,2,2)
         plot_speed(peak_speed_cum)
         plt.legend()
-        plt.suptitle(file_path.basename.split("_")[0])
+        plt.suptitle(file_path.basename.split("\\")[0])
 
     # Save the speed values for all datasest
     peak_speed_all.append(peak_speed)
