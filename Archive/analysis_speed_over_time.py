@@ -1,5 +1,4 @@
 # Script for change in speed over time (percentage & cumulative)
-# With bids loading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,41 +8,36 @@ import gc
 import os
 from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
     fill_outliers, norm_perf_speed, norm_0_1
-from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
-
-bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\" # op.join(op.dirname(sample.data_path()), dataset)
 
 # Set analysis parameters
 plot_individual = True
-subject_list = ["EL006", "EL007", "EL008", "EL012", "EL03", "EL014", "EL015", "EL016",
-                "L001", "L002", "L003", "L005", "L006", "L007", "L008"]
+med = "MedOff"
+
+# Get list of all datasets
+path = "D:\\rawdata\\rawdata\\"
+folder_list = os.listdir(path)
+files_list = []
+# Loop over every subject
+for subject_folder in folder_list:
+    # Get the brainvision files for that subject
+    for root, dirs, files in os.walk(path+subject_folder):
+        for file in files:
+            if (file.endswith(".vhdr")) and "VigorStim" in file and "behav" in file and med in file:
+                files_list.append(os.path.join(root, file))
 
 # Plot the speed of all datasets
 peak_speed_all = []
 peak_speed_cum_all = []
-for subject in subject_list:
-
-    # Read one dataset from every participant
-    for task_name in ["VigorStimR", "VigorStimL"]:
-        if subject in ["EL012", "L001"]:
-            bids_match = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task=task_name, description="behav").match()
-        else:
-            bids_match = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task=task_name, description="neurobehav").match()
-        if len(bids_match) > 0:
-            file_path = bids_match[1]
-            # Loop through dataset to get the Off dataset
-            for bids_m in bids_match[1::2]:
-                if "Off" in bids_m.basename:
-                    file_path = bids_m
+for file in files_list:
 
     # Load the dataset of interest
-    raw = read_raw_bids(bids_path=file_path, verbose=False)
+    raw_data = mne.io.read_raw_brainvision(file, preload=True)
 
     # Get the channel index of the mean speed values
-    mean_speed_idx = raw.info["ch_names"].index("SPEED_MEAN")
+    mean_speed_idx = raw_data.info["ch_names"].index("SPEED_MEAN")
 
     # Structure data in trials and blocks
-    data = reshape_data_trials(raw)
+    data = reshape_data_trials(raw_data)
 
     # Extract the peak speed of all trials
     peak_speed = np.max(data[:, :, :, mean_speed_idx, :], axis=3)
@@ -69,7 +63,7 @@ for subject in subject_list:
         plt.subplot(1,2,2)
         plot_speed(peak_speed_cum)
         plt.legend()
-        plt.suptitle(file_path.basename.split("\\")[0])
+        plt.suptitle(file.split("\\")[-1])
 
     # Save the speed values for all datasest
     peak_speed_all.append(peak_speed)

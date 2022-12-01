@@ -13,7 +13,7 @@ from ICNVigorTask.utils.utils import norm_0_1
 # Get list of all brainvision and matlab datasets
 type = "VigorStim"
 
-path = "D:\\rawdata\\rawdata\\"
+path = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"# "E:\\rawdata\\rawdata\\"
 folder_list = os.listdir(path)
 files_raw_list = []
 files_mat_list = []
@@ -22,7 +22,7 @@ for subject_folder in folder_list:
     # Get the brainvision files for that subject
     for root, dirs, files in os.walk(path+subject_folder):
         for file in files:
-            if (file.endswith(".vhdr")) and type in file and "new" not in file and "EL012" in file:
+            if (file.endswith(".vhdr")) and type in file and "neurobehav" not in file:
                 files_raw_list.append(os.path.join(root, file))
                 # Add matlab file with correct hand
                 hand = "R" if "R" in file else "L"

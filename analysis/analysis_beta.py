@@ -9,36 +9,47 @@ import gc
 import os
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
-    fill_outliers, norm_perf_speed, norm_0_1
+    fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode
+
+bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"
 
 # Set analysis parameters
+med = "Off"
 plot_individual = True
-med = "MedOff"
+subject_list = ["EL013", "EL014", "EL015", "EL016", "EL006", "EL007", "EL008",
+             "L002", "L005", "L006", "L007", "L008"]
 
-# Get list of all datasets
-path = "D:\\rawdata\\rawdata\\"
-folder_list = os.listdir(path)
-files_list = []
-# Loop over every subject
-for subject_folder in folder_list:
-    # Get the brainvision files for that subject
-    for root, dirs, files in os.walk(path+subject_folder):
-        for file in files:
-            if (file.endswith(".vhdr")) and "VigorStim" in file and "neuro" in file and med in file:
-                files_list.append(os.path.join(root, file))
+# Plot the speed of all datasets
+peak_speed_all = []
+peak_speed_cum_all = []
+for subject in subject_list:
 
-for file in files_list:
+    # Read one dataset from every participant
+    file_path = get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med=med)
+    if not file_path:
+        continue
 
     # Load the dataset of interest
-    raw_data = mne.io.read_raw_brainvision(file, preload=True)
-    ch_names = raw_data.info['ch_names']
-    ch_lfp = mne.pick_channels_regexp(ch_names, 'LFP *')
+    raw = read_raw_bids(bids_path=file_path, verbose=False)
+    raw.load_data()
+
+    # Drop bad channels
+    raw.drop_channels(raw.info["bads"])
+    ch_names = raw.info['ch_names']
+
+    # Add average channels
+    add_average_channels_electrode(raw)
+
+    # Add bipolar channels
+
+    # Get the average left bipolar LFP channels
 
     # Plot power spectrum
-    #raw_data.compute_psd(fmin=0, fmax=50).plot()
-    # Compute the power spectra
-    plt.figure()
-    psds, freqs = mne.time_frequency.psd_welch(raw_data.pick_channels(np.array(ch_names)[ch_lfp]), fmin=1, fmax=50, n_fft=500)
-    plt.plot(freqs, psds.T)
+    raw.crop(tmax=20)
+    raw.notch_filter(130)
+    #raw.filter(l_freq=1, h_freq=60)
+    raw.compute_psd(fmin=0, fmax=50, n_fft=1048).plot()
+
+    # Remove the artifact
 
 plt.show()
