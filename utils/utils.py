@@ -207,7 +207,5 @@ def add_events(raw, onset_idx, offset_idx, peak_idx):
     stim_raw = mne.io.RawArray(np.zeros((1, len(raw.times))), info)
     raw.add_channels([stim_raw], force_update_info=True)
     raw.add_events(new_events, stim_channel=None)
-
-    # Test with plotting
     events = mne.find_events(raw, stim_channel='STI')
-    raw.plot(events=events)
+    return events

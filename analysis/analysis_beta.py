@@ -50,10 +50,20 @@ for subject in subject_list:
     onset_idx = get_onset_idx(raw)
     offset_idx = get_offset_idx(raw)
     peak_idx = get_peak_idx(raw)
-    add_events(onset_idx, onset_idx, peak_idx)
+    events = add_events(raw, onset_idx, offset_idx, peak_idx)
 
+    # Epoch around the events and plot the average time frequency plot
+    raw.crop(tmin=500)
+    raw.pick_channels(bipolar_channels)
+    for event_id in [1,2,3]:
+        epochs = mne.Epochs(raw, events=events, event_id=event_id, tmin=-0.5, tmax=0.5)
+        # Get the time-frequency analysis
+        power, itc = mne.time_frequency.tfr_morlet(epochs, freqs=np.arange(5, 80), n_cycles=2)
+        power.plot([1], mode='logratio', title=power.ch_names[1])
 
-    # Crop for initial anaylsis - remove stimulation artifacts
+        power = mne.time_frequency.tfr_morlet(epochs, freqs=np.arange(5, 80), n_cycles=2, average=False, return_itc=False)
+
+    # Crop for initial analysis - remove stimulation artifacts
     #raw.crop(tmax=200)
 
     # Compute power spectrum
