@@ -9,7 +9,7 @@ import gc
 import os
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
-    fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode
+    fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode, add_bipolar_channels
 
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"
 
@@ -35,21 +35,37 @@ for subject in subject_list:
 
     # Drop bad channels
     raw.drop_channels(raw.info["bads"])
-    ch_names = raw.info['ch_names']
 
     # Add average channels
-    add_average_channels_electrode(raw)
+    average_channels = add_average_channels_electrode(raw)
 
-    # Add bipolar channels
+    # Add bipolar channels (use all average channels that were just added with all possible combinations on one electrode)
+    bipolar_channels = add_bipolar_channels(raw, average_channels)
 
-    # Get the average left bipolar LFP channels
+    # Filter the data
+    raw.filter(l_freq=1, h_freq=80)
+    raw.notch_filter(50)
 
-    # Plot power spectrum
+    # Crop for initial anaylsis - remove atimulation artifacts
     raw.crop(tmax=20)
-    raw.notch_filter(130)
-    #raw.filter(l_freq=1, h_freq=60)
-    raw.compute_psd(fmin=0, fmax=50, n_fft=1048).plot()
 
-    # Remove the artifact
+    # Compute power spectrum
+    spectrum = raw.copy().pick_channels(bipolar_channels).compute_psd(method="multitaper", fmin=1, fmax=50)
+    spectrum.plot(dB=False)
+    lfp_data = raw.get_data(bipolar_channels)
+    psds, freqs = mne.time_frequency.psd_array_multitaper(lfp_data, sfreq=500, fmin=1, fmax=50)
+    plt.figure()
+    plt.plot(freqs, 10 * np.log(psds.T))
+    #plt.show()
+
+    # Get the power over time
+    lfp_data = raw.get_data(bipolar_channels)[np.newaxis,:,:]
+    lfp_tfr = mne.time_frequency.tfr_array_morlet(lfp_data, sfreq=raw.info["sfreq"], freqs=np.arange(2,80), output="power")
+    plt.imshow(np.squeeze(10 * np.log(lfp_tfr[:, 3, :, :])), aspect="auto")
+    plt.show()
+
+    # Add event at onset, offset, peak
+    
+    # Plot frequenvy spectrum around onset, peak and offset
 
 plt.show()

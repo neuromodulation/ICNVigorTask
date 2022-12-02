@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import zscore
 from mne_bids import BIDSPath
 import mne
+import itertools
 from typing import Sequence
 
 def norm_0_1(array):
@@ -89,7 +90,10 @@ def get_bids_filepath(root, subject, task, med):
 
 def add_average_channels_electrode(raw):
     """Add channels consisting of the average signals from all contacts on one level of the electrode"""
+
     ch_names = raw.info["ch_names"]
+    new_ch_names = []
+
     # Average the remaining channels on the same electrode level
     average_channels_list = [
         ["LFP_L_02_STN_MT", "LFP_L_03_STN_MT", "LFP_L_04_STN_MT"],
@@ -100,13 +104,44 @@ def add_average_channels_electrode(raw):
     for av_channel in average_channels_list:
         # Check if any of the channels are present in the dataset
         present_chans = [chan for chan in av_channel if chan in ch_names]
-        # Average them
-        new_chan = raw.get_data(present_chans).mean(axis=0)
-        # Add channel to raw object
-        if len(new_chan) > 0:
+        if len(present_chans) > 0:
+            # Average them
+            new_chan = raw.get_data(present_chans).mean(axis=0)
+            # Create new name and info
             new_chan_number = "_".join([chan.split("_")[2] for chan in present_chans])
             new_chan_name = "_".join(present_chans[0].split("_")[:2] + [new_chan_number] + present_chans[0].split("_")[3:])
-            info = mne.create_info([new_chan_name], raw.info['sfreq'], ["bio"])
+            info = mne.create_info([new_chan_name], raw.info['sfreq'], ["dbs"])
+            # Add channel to raw object
             new_chan_raw = mne.io.RawArray(new_chan[np.newaxis, :], info)
             raw.add_channels([new_chan_raw], force_update_info=True)
-    return raw
+            new_ch_names.append(new_chan_name)
+    return new_ch_names
+
+
+def add_bipolar_channels(raw, average_channels):
+    """Add all combinations of bipolar channels on one electrode (use the averaged channels added at the end of the dataset)"""
+
+    ch_names = raw.info["ch_names"]
+    new_ch_names = []
+
+    # Look over electrode sides
+    for side in ["R", "L"]:
+        # Get the source channels based on which bipolar channels can be constructed
+        source_chans = [chan for chan in average_channels if f"LFP_{side}" in chan]\
+                    + [chan for chan in [f"LFP_{side}_01_STN_MT", f"LFP_{side}_08_STN_MT"] if chan in ch_names]
+
+        # Get all combinations
+        all_combs = list(itertools.combinations(source_chans, 2))
+
+        # Compute the bipolar channels
+        for comb in all_combs:
+            new_chan = raw.get_data(comb[0]) - raw.get_data(comb[1])
+            new_chan_number_0 = ["".join(comb[0].split("_")[2:-2])]
+            new_chan_number_1 = ["".join(comb[1].split("_")[2:-2])]
+            new_chan_name = "_".join(comb[0].split("_")[:2] + new_chan_number_0 + new_chan_number_1 + comb[0].split("_")[-2:])
+            info = mne.create_info([new_chan_name], raw.info['sfreq'], ["dbs"])
+            # Add channel to raw object
+            new_chan_raw = mne.io.RawArray(new_chan, info)
+            raw.add_channels([new_chan_raw], force_update_info=True)
+            new_ch_names.append(new_chan_name)
+    return new_ch_names
