@@ -145,3 +145,69 @@ def add_bipolar_channels(raw, average_channels):
             raw.add_channels([new_chan_raw], force_update_info=True)
             new_ch_names.append(new_chan_name)
     return new_ch_names
+
+
+def get_onset_idx(raw):
+    """Return the iindex at which trials start (speed crosses threshold)"""
+
+    speed = raw.get_data(["SPEED"])
+    blocks = raw.get_data(["BLOCK"])
+    trials = raw.get_data(["TRIAL"])
+    n_trials = int(np.max(trials))
+    n_blocks = int(np.max(blocks))
+    onset_idx = []
+    for i_block in range(1, n_blocks+1):
+        for i_trial in range(1, n_trials + 1):
+            onset_idx.append(np.where(np.logical_and.reduce([blocks == i_block, trials == i_trial, speed > 500]))[1][0])
+
+    return onset_idx
+
+
+def get_offset_idx(raw):
+    """Return the index at which trials ends (speed crosses threshold)"""
+
+    speed = raw.get_data(["SPEED"])
+    blocks = raw.get_data(["BLOCK"])
+    trials = raw.get_data(["TRIAL"])
+    n_trials = int(np.max(trials))
+    n_blocks = int(np.max(blocks))
+    offset_idx = []
+    for i_block in range(1, n_blocks+1):
+        for i_trial in range(1, n_trials + 1):
+            offset_idx.append(np.where(np.logical_and.reduce([blocks == i_block, trials == i_trial, speed > 500]))[1][-1])
+
+    return offset_idx
+
+
+def get_peak_idx(raw):
+    """Return the index at which trials ends (speed crosses threshold)"""
+
+    speed = raw.get_data(["SPEED"])
+    blocks = raw.get_data(["BLOCK"])
+    trials = raw.get_data(["TRIAL"])
+    n_trials = int(np.max(trials))
+    n_blocks = int(np.max(blocks))
+    peak_idx = []
+    for i_block in range(1, n_blocks+1):
+        for i_trial in range(1, n_trials + 1):
+            mask = np.where(np.logical_and(blocks == i_block, trials == i_trial))[1]
+            peak_idx.append(mask[np.argmax(speed[:, mask])])
+
+    return peak_idx
+
+
+def add_events(raw, onset_idx, offset_idx, peak_idx):
+
+    n_trials = len(onset_idx)
+
+    # Add the events
+    new_events = np.vstack((np.hstack((onset_idx, offset_idx, peak_idx)), np.zeros(n_trials * 3),
+                            np.hstack((np.ones(n_trials) * 1, np.ones(n_trials) * 2, np.ones(n_trials) * 3)))).T
+    info = mne.create_info(['STI'], raw.info['sfreq'], ['stim'])
+    stim_raw = mne.io.RawArray(np.zeros((1, len(raw.times))), info)
+    raw.add_channels([stim_raw], force_update_info=True)
+    raw.add_events(new_events, stim_channel=None)
+
+    # Test with plotting
+    events = mne.find_events(raw, stim_channel='STI')
+    raw.plot(events=events)

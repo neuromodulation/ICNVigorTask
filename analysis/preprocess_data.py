@@ -1,5 +1,7 @@
-# Script for analysing neurophysioligical properties of the data
-# Average beta power after movement onset, peak and movement offset
+# Script for preprocessing data for analysis
+# Add average and bipolar channels
+# Mark bad data epochs
+# Add movement onset, peak and offset events
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ import os
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
     fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode, add_bipolar_channels, \
-    get_onset_idx, get_offset_idx, get_peak_idx, add_events
+    get_onset_idx
 
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"
 
@@ -46,31 +48,13 @@ for subject in subject_list:
     raw.filter(l_freq=1, h_freq=80)
     raw.notch_filter(50)
 
-    # Add onset, offset, peak events
+    # Set onset, offset, peak events
     onset_idx = get_onset_idx(raw)
-    offset_idx = get_offset_idx(raw)
     peak_idx = get_peak_idx(raw)
-    add_events(onset_idx, onset_idx, peak_idx)
-
+    offset_idx = get_offset_idx(raw)
 
     # Crop for initial anaylsis - remove stimulation artifacts
     #raw.crop(tmax=200)
-
-    # Compute power spectrum
-    spectrum = raw.copy().pick_channels(bipolar_channels).compute_psd(method="multitaper", fmin=1, fmax=50)
-    spectrum.plot(dB=False)
-    lfp_data = raw.get_data(bipolar_channels)
-    psds, freqs = mne.time_frequency.psd_array_multitaper(lfp_data, sfreq=500, fmin=1, fmax=50)
-    plt.figure()
-    plt.plot(freqs, 10 * np.log(psds.T))
-    #plt.show()
-
-    # Get the power over time
-    lfp_data = raw.get_data(bipolar_channels)[np.newaxis,:,:]
-    lfp_tfr = mne.time_frequency.tfr_array_morlet(lfp_data, sfreq=raw.info["sfreq"], freqs=np.arange(2,80), output="power")
-    plt.imshow(np.squeeze(10 * np.log(lfp_tfr[:, 3, :, :])), aspect="auto")
-    #plt.show()
-
 
 
     # Plot frequenvy spectrum around onset, peak and offset
