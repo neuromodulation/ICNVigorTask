@@ -1,5 +1,5 @@
 # Script for analysing neurophysioligical properties of the data
-# Average beta power after movement onset, peak and movement offset
+# Average beta power after movement onset, peak and movement offset!
 
 import numpy as np
 import matplotlib.pyplot as plt
