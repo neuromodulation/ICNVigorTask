@@ -1,4 +1,5 @@
-# Script for change in speed over time
+# Script for change in speed over time (percentage & cumulative)
+# With bids loading
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,11 +10,6 @@ from utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, 
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
-from statannot import add_stat_annotation
-import seaborn as sb
-from scipy import stats
-import matplotlib
-matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -21,12 +17,13 @@ bids_root = "C:\\Users\\ICN\\Documents\\VigorStim\\Data\\rawdata\\"
 
 # Set analysis parameters
 med = "Off"
-plot_individual = False
+plot_individual = True
 subject_list = ["EL006", "EL007", "EL008", "EL012", "EL03", "EL014", "EL015", "EL016",
                 "L001", "L002", "L003", "L005", "L006", "L007", "L008"]
 
 # Plot the speed of all datasets
 peak_speed_all = []
+peak_speed_cum_all = []
 with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
     for subject in subject_list:
 
@@ -56,57 +53,41 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         # Normalize them to the start speed
         peak_speed = norm_perf_speed(peak_speed)
 
+        # Compute the cumulative change in peak speed
+        peak_speed_cum = np.cumsum(np.diff(peak_speed), axis=2)
+        peak_speed_cum[:,1,:] += peak_speed_cum[:,0,-1][:, np.newaxis]
+
         # Plot if needed
         if plot_individual:
             plt.figure(figsize=(10, 5))
+            plt.subplot(1,2,1)
             plot_speed(smooth_moving_average(peak_speed))
             plt.xlabel("Movements")
             plt.ylabel("$\Delta$ speed in %")
+            plt.subplot(1,2,2)
+            plot_speed(peak_speed_cum)
+            plt.legend()
+            plt.suptitle(file_path.basename.split("\\")[0])
 
         # Save the speed values for all datasest
         peak_speed_all.append(peak_speed)
+        peak_speed_cum_all.append(peak_speed_cum)
 
         bar()
-# Average over all datasets
-mean_peak_speed = np.mean(peak_speed_all, axis=0)
 
-# Plot speed over time
+# Average over all datasets
+peak_speed_all = np.array(peak_speed_all)
+mean_peak_speed = np.mean(peak_speed_all, axis=0)
+peak_speed_cum_all = np.array(peak_speed_cum_all)
+mean_peak_speed_cum = np.mean(peak_speed_cum_all, axis=0)
+
+# Plot
 plt.figure(figsize=(10,5))
 plt.subplot(1,2,1)
 plot_speed(smooth_moving_average(mean_peak_speed))
 plt.xlabel("Movements")
 plt.ylabel("$\Delta$ speed in %")
-
-# Reshape array such that data from one condition is flattened
-peak_speed_all = np.array(peak_speed_all)
-n_par, _,_,n_trials = peak_speed_all.shape
-peak_speed_all_long = np.reshape(peak_speed_all, (n_par, 2, n_trials*2))
-
-# Compute significance for each sample
-t_all, p_all = stats.ttest_rel(peak_speed_all_long[:,0,:], peak_speed_all_long[:,1,:], axis=0)
-sig_samp = np.where(p_all < 0.05)[0]
-
-# Compute significance in 4 bins
-peak_speed_bin = np.dstack((np.mean(peak_speed_all[:,:,:,:int(n_trials/2)], axis=3),
-              np.mean(peak_speed_all[:,:,:,int(n_trials/2):], axis=3)))[:,:,[0,2,1,3]]
-t_bin, p_bin = stats.ttest_rel(peak_speed_bin[:,0,:], peak_speed_bin[:,1,:], axis=0)
-
-# Plot mean speed change and significance for 4 bins
 plt.subplot(1,2,2)
-x_names = ['1-50', '50-100', '100-150', '150-200']
-hue_names = ['Fast', 'Slow']
-peak_speed_bin = np.transpose(peak_speed_bin, (2, 0, 1))
-dim1, dim2, dim3 = np.meshgrid(x_names, np.arange(peak_speed_bin.shape[1]), hue_names, indexing='ij')
-ax = sb.barplot(x=dim1.ravel(), y=peak_speed_bin.ravel(), hue=dim3.ravel())
-sb.stripplot(x=dim1.ravel(), y=peak_speed_bin.ravel(), hue=dim3.ravel(), dodge=True, ax=ax)
-
-# Add statistics
-add_stat_annotation(ax, x=dim1.ravel(), y=peak_speed_bin.ravel(), hue=dim3.ravel(),
-                    box_pairs=[(("1-50", "Fast"), ("1-50", "Slow")),
-                                 (("50-100", "Fast"), ("50-100", "Slow")),
-                                 (("100-150", "Fast"), ("100-150", "Slow")),
-                                 (("150-200", "Fast"), ("150-200", "Slow"))
-                                ],
-                    test='t-test_paired', text_format='simple', loc='inside', verbose=2, comparisons_correction=None)
-
+plot_speed(mean_peak_speed_cum)
+plt.title("Average")
 plt.show()

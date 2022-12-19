@@ -78,11 +78,11 @@ def get_bids_filepath(root, subject, task, med):
     """Return the filepath with the given specifications, if not existent return None"""
 
     # Get all datasets for the given subject
-    files = BIDSPath(root=root, subject=subject, suffix="ieeg").match()[1::2]
+    files = BIDSPath(root=root, subject=subject, suffix="ieeg").match()
     # Get the corresponding file
     target_file = None
     for file in files:
-        if task in file.basename and med in file.basename:
+        if task in file.basename and med in file.basename and ".vhdr" in file.basename:
             target_file = file
             break
     return target_file
