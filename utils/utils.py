@@ -58,6 +58,18 @@ def smooth_moving_average(array, window_size=5):
     return array_smooth
 
 
+def moving_variance(array, window_size=15):
+    """Return array where values are variance in a moving window"""
+    array_var = np.array([np.var(array[i:i+window_size]) for i in range(len(array))])
+    return array_var
+
+
+def get_peak_acc(array):
+    """Get peak acceleration of speed array"""
+    peak_acc = np.max(np.diff(array, axis=3), axis=3)
+    return peak_acc
+
+
 def plot_speed(speed_array):
     # Plot without the first 5 movements
     plt.plot(speed_array[0, :, :].flatten()[5:], label="slow")
@@ -209,3 +221,14 @@ def add_events(raw, onset_idx, offset_idx, peak_idx):
     raw.add_events(new_events, stim_channel=None)
     events = mne.find_events(raw, stim_channel='STI')
     return events
+
+
+def compute_difference_over_time(data):
+    """Data: conditionsxblocksxtrialsxsamples"""
+    diffs = np.zeros((2,2,95))
+    for cond in range(2):
+        for block in range(2):
+            for trial in range(95):
+                diffs[cond, block, trial] = np.mean(np.abs(data[cond, block, trial, :] -
+                                                           data[cond, block, trial + 1, :]))
+    return diffs
