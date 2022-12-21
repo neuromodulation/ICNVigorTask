@@ -20,12 +20,12 @@ def norm_speed(array):
     return array_norm
 
 
-def norm_perf_speed(array):
-    """Normalize speed to stimulation block start and return as percentage
+def norm_perc(array):
+    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage
     array: (2x2x96)(Conditions, Blocks, Trials)"""
     mean_start = np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
-    array_norm = ((array - mean_start) / mean_start) * 100
-    return array_norm
+    array_norm_perc = ((array - mean_start) / mean_start) * 100
+    return array_norm_perc
 
 
 def reshape_data_trials(raw_data):
@@ -70,10 +70,21 @@ def get_peak_acc(array):
     return peak_acc
 
 
-def plot_speed(speed_array):
+def plot_conds(array, var=None):
+    """array = (conds x blocks x trials)
+    Plot data divided in two conditions, if given add the variance as shaded area"""
     # Plot without the first 5 movements
-    plt.plot(speed_array[0, :, :].flatten()[5:], label="slow")
-    plt.plot(speed_array[1, :, :].flatten()[5:], label="fast")
+    plt.plot(array[0, :, :].flatten()[5:], label="slow", color="blue", linewidth=3)
+    plt.plot(array[1, :, :].flatten()[5:], label="fast", color="red", linewidth=3)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    x = np.arange(len(array[0, :, :].flatten()[5:]))
+    if var is not None:
+        plt.fill_between(x, array[0, :, :].flatten()[5:] - var[0, :, :].flatten()[5:], array[0, :, :].flatten()[5:] + var[0, :, :].flatten()[5:]
+                         , color="blue", alpha =0.5)
+        plt.fill_between(x, array[1, :, :].flatten()[5:] - var[1, :, :].flatten()[5:],
+                         array[1, :, :].flatten()[5:] + var[1, :, :].flatten()[5:]
+                         , color="red", alpha=0.5)
 
 
 def fill_outliers(array):
