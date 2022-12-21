@@ -70,6 +70,60 @@ def get_peak_acc(array):
     return peak_acc
 
 
+def get_move_dur(array):
+    """Compute the movement duration for each movement"""
+    onset_idx = np.apply_along_axis(lambda m: np.where(m > 300)[0][0], axis=3, arr=array[:, :, :, 0, :])
+    offset_idx = np.apply_along_axis(lambda m: np.where(m == 1)[0][0], axis=3, arr=array[:, :, :, 1, :])
+    dur_array = offset_idx - onset_idx
+    return dur_array
+
+
+def get_RT(array):
+    """Compute the reaction time for each movement (time of movement onset)"""
+    onset_array = np.apply_along_axis(lambda m: np.where(m > 300)[0][0], axis=3, arr=array)
+    return onset_array
+
+
+def get_tortu(array):
+    """Compute the tortuosity of each movement"""
+    # Get the position of the target for each movement
+    target_x = np.apply_along_axis(lambda m: np.unique(m)[np.unique(m) > 0][0], axis=3, arr=array[:, :, :, 2, :])
+    target_y = np.apply_along_axis(lambda m: np.unique(m)[np.unique(m) > 0][0], axis=3, arr=array[:, :, :, 3, :])
+    # Get start position
+    start_x = np.apply_along_axis(lambda m: m[0], axis=3, arr=array[:, :, :, 0, :])
+    start_y = np.apply_along_axis(lambda m: m[0], axis=3, arr=array[:, :, :, 1, :])
+    # Compute the shortest path from start to target
+    path_min = np.sqrt((target_x - start_x)**2 + (target_y - start_y)**2)
+    # Compute the actual path
+    path_x = np.sum(np.diff(array[:, :, :, 0, :]), axis=3)
+    path_y = np.sum(np.diff(array[:, :, :, 1, :]), axis=3)
+    path = np.sqrt(path_x**2 + path_y**2)
+    # Compute teh tortuosity
+    tortuosity = path/path_min
+    return tortuosity
+
+
+def align_move_onset(array, threshold=300):
+    """Align speed array to movement onset defines by thresholf"""
+    start_idx = np.where(array > threshold)[0][0]
+    array_tmp = array[start_idx:]
+    new_array = np.zeros(array.shape)
+    new_array[:len(array_tmp)] = array_tmp
+    return new_array
+
+
+def get_variability(array, window=10):
+    """Compute variability of movements over time, moving window with 10 moves per window"""
+    # Align onset of movements
+    array = np.apply_along_axis(lambda m: align_move_onset(m), axis=3, arr=array)
+    # Compute median variance over a set of movements
+    var_array = np.zeros((2, 2, 95-window))
+    for trial in range(95-window):
+        var_array[:, :, trial] = np.median(np.var(array[:, :, trial:trial+window, :1000], axis=2), axis=2)
+    return var_array
+
+
+
 def plot_conds(array, var=None):
     """array = (conds x blocks x trials)
     Plot data divided in two conditions, if given add the variance as shaded area"""
@@ -78,6 +132,7 @@ def plot_conds(array, var=None):
     plt.plot(array[1, :, :].flatten()[5:], label="fast", color="red", linewidth=3)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
+    plt.axhline(0, linewidth=2, color="black")
     x = np.arange(len(array[0, :, :].flatten()[5:]))
     if var is not None:
         plt.fill_between(x, array[0, :, :].flatten()[5:] - var[0, :, :].flatten()[5:], array[0, :, :].flatten()[5:] + var[0, :, :].flatten()[5:]
@@ -234,12 +289,3 @@ def add_events(raw, onset_idx, offset_idx, peak_idx):
     return events
 
 
-def compute_difference_over_time(data):
-    """Data: conditionsxblocksxtrialsxsamples"""
-    diffs = np.zeros((2,2,95))
-    for cond in range(2):
-        for block in range(2):
-            for trial in range(95):
-                diffs[cond, block, trial] = np.mean(np.abs(data[cond, block, trial, :] -
-                                                           data[cond, block, trial + 1, :]))
-    return diffs
