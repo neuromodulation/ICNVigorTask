@@ -112,16 +112,26 @@ def align_move_onset(array, threshold=300):
     return new_array
 
 
-def get_variability(array, window=10):
+def get_variability_old(array, window=5):
     """Compute variability of movements over time, moving window with 10 moves per window"""
     # Align onset of movements
     array = np.apply_along_axis(lambda m: align_move_onset(m), axis=3, arr=array)
     # Compute median variance over a set of movements
     var_array = np.zeros((2, 2, 95-window))
     for trial in range(95-window):
-        var_array[:, :, trial] = np.median(np.var(array[:, :, trial:trial+window, :1000], axis=2), axis=2)
+        var_array[:, :, trial] = np.mean(np.var(array[:, :, trial:trial+window, :500], axis=2), axis=2)
     return var_array
 
+
+def get_variability(array, window=5):
+    """Compute variability of movements over time, moving window with 10 moves per window"""
+    # Align onset of movements
+    array = np.apply_along_axis(lambda m: align_move_onset(m), axis=3, arr=array)
+    # Compute median variance over a set of movements
+    var_array = np.zeros((2, 2, 95))
+    for trial in range(95):
+        var_array[:, :, trial] = np.mean(np.abs(array[:, :, trial,:1000] - array[:, :, trial+1,:1000]), axis=2)
+    return var_array
 
 
 def plot_conds(array, var=None):
@@ -145,8 +155,10 @@ def plot_conds(array, var=None):
 def fill_outliers(array):
     idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
     for idx in idx_outlier:
-        if idx < array.shape[0]-1:
+        if idx < array.shape[0]-2 and idx+1 not in idx_outlier and idx-1 not in idx_outlier:
             array[idx] = np.mean([array[idx-1], array[idx+1]])
+        elif idx < array.shape[0] - 2:
+            array[idx] = np.mean([array[idx - 2], array[idx + 2]])
         else:
             array[idx] = np.mean([array[idx - 1], array[idx -2]])
     return array

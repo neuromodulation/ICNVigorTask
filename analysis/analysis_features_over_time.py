@@ -26,9 +26,9 @@ bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\Data\\rawdata\
 
 # Set analysis parameters
 feature = "variability" # out of ["peak_speed", "peak_acc", "move_dur", "RT", "tortu", "variability"]
-plot_individual = False
-subject_list = ["EL006", "EL007", "EL008", "EL012", "EL013", "EL014", "EL015", "EL016",
-                "L001", "L002", "L003", "L005", "L006", "L007", "L008"]
+plot_individual = True
+subject_list = ["L001", "EL006", "EL007", "EL008", "EL012", "EL013", "EL014", "EL015", "EL016",
+                 "L002", "L003", "L005", "L006", "L007", "L008"]
 
 # Plot the feature over time for all datasets
 feature_array_all = []
@@ -57,11 +57,9 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         # Extract the feature
         # Peak speed
         if feature == "peak_speed":
-            # Get the channel index of the mean speed values
             feature_array = np.max(data[:, :, :, mean_speed_idx, :], axis=3)
         # Peak acceleration
         if feature == "peak_acc":
-            # Get the channel index of the mean speed values
             feature_array = utils.get_peak_acc(data[:, :, :, mean_speed_idx, :])
         # Movement duration
         if feature == "move_dur":
@@ -95,7 +93,7 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
             plt.ylabel(f"$\Delta$ {feature} in %")
             plt.title(file_path.basename)
 
-        # Save the speed values for all datasest
+        # Save the feature values for all datasest
         feature_array_all.append(feature_array)
 
         bar()
@@ -121,12 +119,12 @@ feature_bin = np.dstack((np.mean(feature_array_all[:,:,:,:int(n_trials/2)], axis
 t_bin, p_bin = stats.ttest_rel(feature_bin[:,0,:], feature_bin[:,1,:], axis=0)
 
 # Plot mean feature change and significance for 4 bins
-plt.subplot(1,2,2)
+plt.subplot(1, 2, 2)
 x_names = ['1-50', '50-100', '100-150', '150-200']
 hue_names = ['Slow', 'Fast']
 feature_bin = np.transpose(feature_bin, (2, 0, 1))
 dim1, dim2, dim3 = np.meshgrid(x_names, np.arange(feature_bin.shape[1]), hue_names, indexing='ij')
-ax = sb.barplot(x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(), palette=["blue", "red"])
+ax = sb.barplot(x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(), palette=["blue", "red"], estimator=np.median)
 sb.stripplot(x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(), dodge=True, ax=ax, palette=["blue", "red"])
 
 # Add statistics
@@ -141,6 +139,6 @@ plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 
 # Save figure on group basis
-plt.savefig(f"../../../Plots/{feature}_group.pdf", format="pdf", bbox_inches="tight")
+plt.savefig(f"../../../Plots/{feature}_group.png", format="png", bbox_inches="tight")
 
 plt.show()
