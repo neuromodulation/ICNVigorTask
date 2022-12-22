@@ -64,6 +64,19 @@ def moving_variance(array, window_size=15):
     return array_var
 
 
+def get_slow_fast(array, cond):
+    """Return array indicating if move is slow/fast (depending on cond)"""
+    res = np.zeros((2, 96))
+    for block in range(2):
+        for trial in range(2, 96):
+            diff = array[block, trial - 2:trial] - array[block, trial]
+            if cond == "slow" and np.all(diff > 0) :
+                res[block, trial] = 1
+            if cond == "fast" and np.all(diff < 0) :
+                res[block, trial] = 1
+    return res
+
+
 def get_peak_acc(array):
     """Get peak acceleration of speed array"""
     peak_acc = np.max(np.diff(array, axis=3), axis=3)

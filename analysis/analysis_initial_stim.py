@@ -106,7 +106,7 @@ n_stim_fast = np.array(n_stim_fast)
 feature_array_slow_all = np.array(feature_array_slow_all)
 feature_array_fast_all = np.array(feature_array_fast_all)
 # Average
-bis_thres = 5
+bis_thres = 10
 plt.figure(figsize=(10, 4))
 plt.subplot(1, 2, 1)
 corr, p = pearsonr(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
