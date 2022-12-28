@@ -24,7 +24,7 @@ datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
 peak_speed = np.load(f"../../../Data/peak_speed.npy")
-peak_speed = peak_speed[datasets,:,:,:]
+peak_speed = peak_speed[datasets, :, :, :]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
@@ -33,7 +33,7 @@ np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 peak_speed = utils.norm_perc(peak_speed)
 
 # Smooth over 5 consecutive movements
-peak_speed = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
+#peak_speed = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
 
 # Load stim time matrix
 stim_time = np.load(f"../../../Data/stim_time.npy")
@@ -42,86 +42,25 @@ stim_time = stim_time[datasets,:,:,:]
 # Extract whether a trial was stimulated or not
 stim = stim_time.copy()
 stim[np.isnan(stim)] = 0
-stim[not np.nonzero(stim)] = 1
+stim[np.nonzero(stim)] = 1
 
-# 
-bins = 10
-slow = [np.sum(arr) for arr in np.array_split(stim[0, :], bins)]
-fast = [np.sum(arr) for arr in np.array_split(stim[1, :], bins)]
+# Bin number of stimulated movements
+bins = 15
+n_stim = np.array([np.mean(arr, axis=3) for arr in np.array_split(stim, bins, axis=3)])
+peak_speed_bin = np.array([np.median(arr, axis=3) for arr in np.array_split(peak_speed, bins, axis=3)])
 
-n_stim_slow = []
-n_stim_fast = []
-feature_array_slow_all = []
-feature_array_fast_all = []
-
-
-
-
-""" # Extract the feature
-# Peak speed
-if feature == "peak_speed":
-    feature_array = np.max(data[:, :, :, mean_speed_idx, :], axis=3)
-
-# Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=feature_array)
-
-# Normalize to the start and smooth over 5 consecutive movements
-feature_array = utils.smooth_moving_average(utils.norm_perc(feature_array), window_size=5)
-
-# Bin
-feature_array_slow = [np.median(arr) for arr in np.array_split(feature_array[0, 0, 5:], bins)]
-feature_array_fast = [np.median(arr) for arr in np.array_split(feature_array[1, 0, 5:], bins)]
-
-if plot_individual:
-    plt.figure(figsize=(15, 5))
-    plt.subplot(1, 4, 1)
-    plt.plot(slow, label="Slow")
-    plt.plot(fast, label="Fast")
-    plt.subplot(1, 4, 2)
-    plt.plot(feature_array_slow, label="Slow")
-    plt.plot(feature_array_fast, label="Fast")
-    #plt.title(file_path.basename)
-    plt.subplot(1, 4, 3)
-    corr, p = pearsonr(feature_array_slow, slow)
-    sb.regplot(feature_array_slow, slow)
-    plt.title(f"Slow corr = {np.round(corr,2)} p = {np.round(p,3)}")
-    plt.subplot(1, 4, 4)
-    corr, p = pearsonr(feature_array_fast, fast)
-    sb.regplot(feature_array_fast, fast)
-    plt.title(f"Fast corr = {np.round(corr,2)} p = {np.round(p,3)}")
-    plt.legend()
-
-# Save in array
-n_stim_slow.append(slow)
-n_stim_fast.append(fast)
-# Save the feature values for all datasest
-feature_array_slow_all.append(feature_array_slow)
-feature_array_fast_all.append(feature_array_fast)
-
-bar()
-
-# Group level analysis
-n_stim_slow = np.array(n_stim_slow)
-n_stim_fast = np.array(n_stim_fast)
-feature_array_slow_all = np.array(feature_array_slow_all)
-feature_array_fast_all = np.array(feature_array_fast_all)
-# Average
-bis_thres = 10
-plt.figure(figsize=(10, 4))
-plt.subplot(1, 2, 1)
-corr, p = spearmanr(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
-sb.regplot(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
-plt.title(f"Slow corr = {np.round(corr,2)} p = {np.round(p,3)}")
-plt.xlabel(f"$\Delta$ {feature} in %", fontsize=14)
-plt.ylabel(f"# of stimulated movements", fontsize=14)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.subplot(1, 2, 2)
-corr, p = pearsonr(feature_array_fast_all[:,:bis_thres].ravel(), n_stim_fast[:,:bis_thres].ravel())
-sb.regplot(feature_array_fast_all[:,:bis_thres].ravel(), n_stim_fast[:,:bis_thres].ravel())
-plt.title(f"Fast corr = {np.round(corr,2)} p = {np.round(p,3)}")
-plt.xlabel(f"$\Delta$ {feature} in %", fontsize=14)
-plt.ylabel(f"# of stimulated movements", fontsize=14)
+# Plot as scatter plot and compute correlation for each condition
+cond_names = ["Slow", "Fast"]
+plt.figure(figsize=(12, 4))
+for cond in range(2):
+    plt.subplot(1, 2, cond+1)
+    corr, p = spearmanr(peak_speed_bin[:, :, cond, 0].ravel(), n_stim[:, :, cond, 0].ravel())
+    sb.regplot(peak_speed_bin[:, :, cond, 0].ravel(), n_stim[:, :, cond, 0].ravel())
+    plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr,2)}, p = {np.round(p,3)}", fontweight='bold')
+    plt.xlabel(f"$\Delta$ speed in %", fontsize=14)
+    plt.ylabel(f"% of stimulated movements", fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.subplots_adjust(bottom=0.15, hspace=0.2)
 
 plt.show()
-"""
