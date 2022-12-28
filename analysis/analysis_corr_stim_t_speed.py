@@ -1,4 +1,4 @@
-# Correlation between number of stimulated movements and peak speed
+# Correlation between time of stimulation and peak speed
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,14 +38,13 @@ peak_speed = utils.norm_perc(peak_speed)
 stim_time = np.load(f"../../../Data/stim_time.npy")
 stim_time = stim_time[datasets, :, :, :]
 
-# Extract whether a trial was stimulated or not
-stim = stim_time.copy()
-stim[np.isnan(stim)] = 0
-stim[np.nonzero(stim)] = 1
+# Load speed peak time matrix
+peak_speed_time = np.load(f"../../../Data/peak_speed_time.npy")
+peak_speed_time = peak_speed_time[datasets, :, :, :]
 
-# Bin number of stimulated movements and peak speed
+# Bin time of stimulation and peak speed
 bins = 15
-n_stim = np.array([np.mean(arr, axis=3)*100 for arr in np.array_split(stim, bins, axis=3)])
+stim_time_bin = np.array([np.nanmean(arr, axis=3) for arr in np.array_split(stim_time, bins, axis=3)])
 peak_speed_bin = np.array([np.median(arr, axis=3) for arr in np.array_split(peak_speed, bins, axis=3)])
 
 # Plot as scatter plot and compute correlation for each condition
@@ -53,11 +52,11 @@ cond_names = ["Slow", "Fast"]
 plt.figure(figsize=(12, 4))
 for cond in range(2):
     plt.subplot(1, 2, cond+1)
-    corr, p = spearmanr(peak_speed_bin[:, :, cond, 0].ravel(), n_stim[:, :, cond, 0].ravel())
-    sb.regplot(peak_speed_bin[:, :, cond, 0].ravel(), n_stim[:, :, cond, 0].ravel())
+    corr, p = spearmanr(peak_speed_bin[:, :, cond, 0].ravel(), stim_time_bin[:, :, cond, 0].ravel())
+    sb.regplot(peak_speed_bin[:, :, cond, 0].ravel(),stim_time_bin[:, :, cond, 0].ravel())
     plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr,2)}, p = {np.round(p,3)}", fontweight='bold')
     plt.xlabel(f"$\Delta$ speed in %", fontsize=14)
-    plt.ylabel(f"% of stimulated movements", fontsize=14)
+    plt.ylabel(f"Time of stimualtion", fontsize=14)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.subplots_adjust(bottom=0.15, hspace=0.2)

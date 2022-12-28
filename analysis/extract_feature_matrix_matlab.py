@@ -23,7 +23,7 @@ matlab_files_root = "C:\\Users\\alessia\\Documents\\Jobs\ICN\\vigor-stim\\Data\\
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "stim_time" # out of ["peak_speed", "stim_time"]
+feature_name = "peak_speed_time" # out of ["peak_speed", "stim_time", "peak_speed_time"]
 
 feature_all = []
 # Loop over all files in folder
@@ -54,6 +54,10 @@ for filename in os.listdir(matlab_files_root):
                 else:
                     stim_time = None
                 feature[cond, block_type, i_trial - 1] = stim_time
+            elif feature_name == "speed_peak_time":
+                data_mask = np.squeeze(data[mask, :])
+                peak_idx = np.argmax(data_mask[:, 3])
+                feature[cond, block_type, i_trial - 1] = data_mask[peak_idx, 2] - data_mask[0, 2]
 
     # Save the feature values for all datasest
     feature_all.append(feature)
