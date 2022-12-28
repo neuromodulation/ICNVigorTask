@@ -20,11 +20,12 @@ warnings.filterwarnings("ignore")
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\Data\\rawdata\\"
 
 # Set analysis parameters
-plot_individual = True
-datasets = [1,2,3,4,5,6,7,8,9]
+plot_individual = False
+datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
 peak_speed = np.load(f"../../../Data/peak_speed.npy")
+peak_speed = peak_speed[datasets,:,:,:]
 n_trials = peak_speed.shape[3]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -32,7 +33,16 @@ np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 
 # Normalize to the start and smooth over 5 consecutive movements
-peak_speed = utils.smooth_moving_average(utils.norm_perc(peak_speed), window_size=5)
+peak_speed = utils.smooth_moving_average(utils.norm_perc(peak_speed), window_size=5, axis=3)
+
+# Plot individual if needed
+if plot_individual:
+    for peak_speed_ind in peak_speed:
+        plt.figure(figsize=(10, 5))
+        utils.plot_conds(peak_speed_ind)
+        plt.xlabel("Movements")
+        plt.ylabel(f"$\Delta$ peak speed in %")
+       # plt.title(file_path.basename)
 
 # Average over all datasets
 median_peak_speed = np.median(peak_speed, axis=0)
@@ -47,8 +57,10 @@ plt.xlabel("Movements", fontsize=14)
 plt.ylabel(f"$\Delta$ peak speed in %", fontsize=14)
 
 # Compute significance in 4 bins
-feature_bin = np.dstack((np.mean(peak_speed[:,:,:,:int(n_trials/2)], axis=3),
-              np.mean(peak_speed[:,:,:,int(n_trials/2):], axis=3)))[:,:,[0,2,1,3]]
+#feature_bin = np.dstack((np.median(peak_speed[:,:,:,:int(n_trials/2)], axis=3),
+#              np.median(peak_speed[:,:,:,int(n_trials/2):], axis=3)))[:,:,[0,2,1,3]]
+feature_bin = np.dstack((np.median(peak_speed[:,:,:,:], axis=3),
+              np.median(peak_speed[:,:,:,:], axis=3)))[:,:,[0,2,1,3]]
 t_bin, p_bin = stats.ttest_rel(feature_bin[:,0,:], feature_bin[:,1,:], axis=0)
 
 # Plot mean feature change and significance for 4 bins
@@ -72,6 +84,6 @@ plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 
 # Save figure on group basis
-plt.savefig(f"../../../Plots/speed_group.png", format="png", bbox_inches="tight")
+#plt.savefig(f"../../../Plots/speed_group.png", format="png", bbox_inches="tight")
 
 plt.show()

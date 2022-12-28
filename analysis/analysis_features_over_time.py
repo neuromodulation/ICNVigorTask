@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\Data\\rawdata\\"
 
 # Set analysis parameters
-feature = "peak_acc" # out of ["peak_speed", "peak_acc", "move_dur", "RT", "tortu", "variability"]
+feature = "peak_speed" # out of ["peak_speed", "peak_acc", "move_dur", "RT", "tortu", "variability"]
 plot_individual = True
 subject_list = ["L001", "EL006", "EL007", "EL008", "EL012", "EL013", "EL014", "EL015", "EL016",
                  "L002", "L003", "L005", "L006", "L007", "L008"]

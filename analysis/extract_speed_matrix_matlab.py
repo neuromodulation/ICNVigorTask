@@ -61,7 +61,7 @@ for filename in os.listdir(matlab_files_root):
     np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=peaks)
 
     # Normalize to the start and smooth over 5 consecutive movements
-    peaks = utils.smooth_moving_average(utils.norm_perc(peaks), window_size=5, axis=3)
+    peaks = utils.smooth_moving_average(utils.norm_perc(peaks), window_size=5)
 
     # Plot if needed
     if plot_individual:

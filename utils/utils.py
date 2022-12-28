@@ -22,7 +22,7 @@ def norm_speed(array):
 
 def norm_perc(array):
     """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
-    mean_start = np.mean(array[..., 0, 5:10], axis=1)[..., np.newaxis, np.newaxis]
+    mean_start = np.mean(array[..., 0, 5:15], axis=-1)[..., np.newaxis, np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
