@@ -21,9 +21,8 @@ def norm_speed(array):
 
 
 def norm_perc(array):
-    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage
-    array: (2x2x96)(Conditions, Blocks, Trials)"""
-    mean_start = np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
+    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
+    mean_start = np.mean(array[..., 0, 5:10], axis=1)[..., np.newaxis, np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
@@ -51,10 +50,10 @@ def reshape_data_trials(raw_data):
     return data_trials
 
 
-def smooth_moving_average(array, window_size=5):
+def smooth_moving_average(array, window_size=5, axis=2):
     """Return the smoothed array where values are averaged in a moving window"""
     box = np.ones(window_size) / window_size
-    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='valid'), axis=2, arr=array)
+    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='valid'), axis=axis, arr=array)
     return array_smooth
 
 

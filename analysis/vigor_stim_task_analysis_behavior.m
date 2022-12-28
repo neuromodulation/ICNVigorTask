@@ -98,9 +98,9 @@ figure;
 subplot(3,1,1);
 % Normalize the peak velocity values by substracting the mean velocity of
 % the movements 5-15
-peaks_all = peaks_all - mean(peaks_all(5:15,:),1);
+peaks_all = peaks_all% - mean(peaks_all(5:15,:),1);
 % Average the values over 8 consecutive movements
-peaks_mean = squeeze(mean(reshape(peaks_all.',2,8,[]),2));
+peaks_mean = peaks_all%squeeze(mean(reshape(peaks_all.',2,8,[]),2));
 % Plot
 x = linspace(1,length(peaks_all),length(peaks_mean));
 plot(x, peaks_mean, "LineWidth", 2);

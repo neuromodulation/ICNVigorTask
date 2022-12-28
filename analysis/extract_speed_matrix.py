@@ -25,10 +25,11 @@ warnings.filterwarnings("ignore")
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\Data\\rawdata\\"
 
 # Set analysis parameters
-feature = "peak_acc" # out of ["peak_speed", "peak_acc", "move_dur", "RT", "tortu", "variability"]
+feature = "peak_speed" # out of ["peak_speed", "peak_acc", "move_dur", "RT", "tortu", "variability"]
 plot_individual = True
 subject_list = ["L001", "EL006", "EL007", "EL008", "EL012", "EL013", "EL014", "EL015", "EL016",
                  "L002", "L003", "L005", "L006", "L007", "L008"]
+subject_list = ["EL015"]
 
 # Plot the feature over time for all datasets
 feature_array_all = []
@@ -38,8 +39,8 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         # Read one dataset from every participant (peferably Med Off, if non existent Med On)
         file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="Off")
         if not file_path:
-            continue
-            #file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="On")
+            #continue
+            file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="On")
 
         # Load the dataset of interest
         raw = read_raw_bids(bids_path=file_path, verbose=False)
@@ -84,7 +85,7 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=feature_array)
 
         # Normalize to the start and smooth over 5 consecutive movements
-        feature_array = utils.smooth_moving_average(utils.norm_perc(feature_array), window_size=5)
+        #feature_array = utils.smooth_moving_average(utils.norm_perc(feature_array), window_size=5)
 
         # Plot if needed
         if plot_individual:
@@ -100,46 +101,8 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         bar()
 
 feature_array_all = np.array(feature_array_all)
-n_par, _,_,n_trials = feature_array_all.shape
 
-# Average over all datasets
-median_feature_array = np.median(feature_array_all, axis=0)
-# Compute standard deviation over all datasets
-std_feature_array = np.std(feature_array_all, axis=0)
-
-# Plot feature over time
-plt.figure(figsize=(15, 5))
-plt.subplot(1,2,1)
-utils.plot_conds(median_feature_array, std_feature_array)
-plt.xlabel("Movements", fontsize=14)
-plt.ylabel(f"$\Delta$ {feature} in %", fontsize=14)
-
-# Compute significance in 4 bins
-feature_bin = np.dstack((np.mean(feature_array_all[:,:,:,:int(n_trials/2)], axis=3),
-              np.mean(feature_array_all[:,:,:,int(n_trials/2):], axis=3)))[:,:,[0,2,1,3]]
-t_bin, p_bin = stats.ttest_rel(feature_bin[:,0,:], feature_bin[:,1,:], axis=0)
-
-# Plot mean feature change and significance for 4 bins
-plt.subplot(1, 2, 2)
-x_names = ['1-50', '50-100', '100-150', '150-200']
-hue_names = ['Slow', 'Fast']
-feature_bin = np.transpose(feature_bin, (2, 0, 1))
-dim1, dim2, dim3 = np.meshgrid(x_names, np.arange(feature_bin.shape[1]), hue_names, indexing='ij')
-ax = sb.barplot(x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(), palette=["blue", "red"], estimator=np.median)
-sb.stripplot(x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(), dodge=True, ax=ax, palette=["blue", "red"])
-
-# Add statistics
-add_stat_annotation(ax, x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(),
-                    box_pairs=[(("1-50", "Fast"), ("1-50", "Slow")),
-                                 (("50-100", "Fast"), ("50-100", "Slow")),
-                                 (("100-150", "Fast"), ("100-150", "Slow")),
-                                 (("150-200", "Fast"), ("150-200", "Slow"))
-                                ],
-                    test='t-test_paired', text_format='simple', loc='inside', verbose=2, comparisons_correction=None)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-
-# Save figure on group basis
-plt.savefig(f"../../../Plots/{feature}_group.png", format="png", bbox_inches="tight")
+# Save matrix
+plt.save(f"../../../Data/peak_speed.npy", feature_array_all)
 
 plt.show()
