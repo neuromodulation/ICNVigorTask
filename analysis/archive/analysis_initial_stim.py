@@ -13,7 +13,7 @@ from statannot import add_stat_annotation
 import seaborn as sb
 from scipy import stats
 import matplotlib
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
@@ -37,7 +37,8 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
         # Read one dataset from every participant (peferably Med Off, if non existent Med On)
         file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="Off")
         if not file_path:
-            file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="On")
+            continue
+            #file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med="On")
 
         # Load the dataset of interest
         raw = read_raw_bids(bids_path=file_path, verbose=False)
@@ -63,14 +64,13 @@ with alive_bar(len(subject_list), force_tty=True, bar='smooth') as bar:
 
         # Detect and fill outliers (e.g. when subject did not touch the screen)
         np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=feature_array)
-        np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=feature_array)
 
         # Normalize to the start and smooth over 5 consecutive movements
         feature_array = utils.smooth_moving_average(utils.norm_perc(feature_array), window_size=5)
 
         # Bin
-        feature_array_slow = [np.median(arr) for arr in np.array_split(feature_array[0, 0, :], bins)]
-        feature_array_fast = [np.median(arr) for arr in np.array_split(feature_array[1, 0, :], bins)]
+        feature_array_slow = [np.median(arr) for arr in np.array_split(feature_array[0, 0, 5:], bins)]
+        feature_array_fast = [np.median(arr) for arr in np.array_split(feature_array[1, 0, 5:], bins)]
 
         if plot_individual:
             plt.figure(figsize=(15, 5))
@@ -109,7 +109,7 @@ feature_array_fast_all = np.array(feature_array_fast_all)
 bis_thres = 10
 plt.figure(figsize=(10, 4))
 plt.subplot(1, 2, 1)
-corr, p = pearsonr(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
+corr, p = spearmanr(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
 sb.regplot(feature_array_slow_all[:,:bis_thres].ravel(), n_stim_slow[:,:bis_thres].ravel())
 plt.title(f"Slow corr = {np.round(corr,2)} p = {np.round(p,3)}")
 plt.xlabel(f"$\Delta$ {feature} in %", fontsize=14)

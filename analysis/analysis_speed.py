@@ -16,9 +16,6 @@ matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
 
-#bids_root = "C:\\Users\\ICN\\Documents\\VigorStim\\Data\\rawdata\\"
-bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\Data\\rawdata\\"
-
 # Set analysis parameters
 plot_individual = False
 datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
@@ -30,10 +27,12 @@ n_trials = peak_speed.shape[3]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 
-# Normalize to the start and smooth over 5 consecutive movements
-peak_speed = utils.smooth_moving_average(utils.norm_perc(peak_speed), window_size=5, axis=3)
+# Normalize to the start of each stimulation block
+peak_speed = utils.norm_perc(peak_speed)
+
+# Smooth over 5 consecutive movements
+peak_speed = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
 
 # Plot individual if needed
 if plot_individual:
@@ -42,10 +41,10 @@ if plot_individual:
         utils.plot_conds(peak_speed_ind)
         plt.xlabel("Movements")
         plt.ylabel(f"$\Delta$ peak speed in %")
-       # plt.title(file_path.basename)
 
 # Average over all datasets
 median_peak_speed = np.median(peak_speed, axis=0)
+
 # Compute standard deviation over all datasets
 std_peak_speed = np.std(peak_speed, axis=0)
 
@@ -79,7 +78,7 @@ add_stat_annotation(ax, x=dim1.ravel(), y=feature_bin.ravel(), hue=dim3.ravel(),
                                  (("100-150", "Fast"), ("100-150", "Slow")),
                                  (("150-200", "Fast"), ("150-200", "Slow"))
                                 ],
-                    test='t-test_paired', text_format='simple', loc='inside', verbose=2, comparisons_correction=None)
+                    test='Wilcoxon', text_format='simple', loc='inside', verbose=2, comparisons_correction=None)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 

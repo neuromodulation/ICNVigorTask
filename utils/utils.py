@@ -22,7 +22,7 @@ def norm_speed(array):
 
 def norm_perc(array):
     """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
-    mean_start = np.mean(array[..., 0, 5:15], axis=-1)[..., np.newaxis, np.newaxis]
+    mean_start = np.mean(array[..., 0, 5:10], axis=-1)[..., np.newaxis, np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
@@ -165,14 +165,21 @@ def plot_conds(array, var=None):
 
 
 def fill_outliers(array):
+    """Fill outliers in array"""
+    # Get index of outliers
     idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
+    idx_non_outlier = np.where(np.abs(zscore(array)) <= 3)[0]
+    # Fill each outlier with mean of closest non outlier
     for idx in idx_outlier:
-        if idx < array.shape[0]-2 and idx+1 not in idx_outlier and idx-1 not in idx_outlier:
-            array[idx] = np.mean([array[idx-1], array[idx+1]])
-        elif idx < array.shape[0] - 2:
-            array[idx] = np.mean([array[idx - 2], array[idx + 2]])
-        else:
-            array[idx] = np.mean([array[idx - 1], array[idx -2]])
+        # Get index of the closest non-outlier before and after
+        where_before = np.where(idx_non_outlier < idx)[0]
+        where_after = np.where(idx_non_outlier > idx)[0]
+        if len(where_before) > 0 and len(where_after) > 0:  # Middle sample
+            array[idx] = np.mean([array[idx_non_outlier[where_before[-1]]], array[idx_non_outlier[where_after[0]]]])
+        elif len(where_before) == 0 and len(where_after) > 0:  # First sample
+            array[idx] = np.mean([array[idx_non_outlier[where_after[1]]], array[idx_non_outlier[where_after[0]]]])
+        elif len(where_before) > 0 and len(where_after) == 0:  # Last sample
+            array[idx] = np.mean([array[idx_non_outlier[where_before[-2]]], array[idx_non_outlier[where_before[-1]]]])
     return array
 
 
