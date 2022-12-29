@@ -2,12 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import mne
-import gc
-import ICNVigorTask.utils.utils as utils
-from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
-from alive_progress import alive_bar
-import time
+from utils import fill_outliers, norm_perc, smooth_moving_average, plot_conds
 from statannot import add_stat_annotation
 import seaborn as sb
 from scipy import stats
@@ -18,25 +13,27 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 plot_individual = False
+# Define which datasets to include based on Dataset_list.csv
+# Only OFF (one for each subject)
 datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
-peak_speed = peak_speed[datasets,:,:,:]
+peak_speed = np.load(f"peak_speed.npy")
+peak_speed = peak_speed[datasets, :, :, :]
 n_trials = peak_speed.shape[3]
 
-# Load orderition order
-slow_first = np.load(f"../../../Data/slow_first.npy")
+# Load order, list of 0/1 (0 if fast-slow,1 if slow-fast)
+slow_first = np.load(f"slow_first.npy")
 slow_first = slow_first[datasets]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
+np.apply_along_axis(lambda m: fill_outliers(m), axis=3, arr=peak_speed)
 
 # Normalize to the start of each stimulation block
-peak_speed = utils.norm_perc(peak_speed)
+peak_speed = norm_perc(peak_speed)
 
 # Smooth over 5 consecutive movements
-peak_speed_smooth = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
+peak_speed_smooth = smooth_moving_average(peak_speed, window_size=5, axis=3)
 
 # Plot for each order
 plt.figure(figsize=(18, 8))
@@ -56,7 +53,7 @@ for order in range(2):
 
     # Plot feature over time
     plt.subplot(2, 2, order + 1)
-    utils.plot_conds(median_peak_speed, std_peak_speed)
+    plot_conds(median_peak_speed, std_peak_speed)
     plt.xlabel("Movements", fontsize=14)
     plt.ylabel(f"$\Delta$ peak speed in %", fontsize=14)
     plt.ylim([-40, 40])
@@ -65,9 +62,6 @@ for order in range(2):
     # Compute significance in 4 bins
     feature_bin = np.dstack((np.median(peak_speed_order[:,:,:,:int(n_trials/2)], axis=3),
                   np.median(peak_speed_order[:,:,:,int(n_trials/2):], axis=3)))[:,:,[0,2,1,3]]
-    #feature_bin = np.dstack((np.median(peak_speed[:,:,:,:], axis=3),
-    #              np.median(peak_speed[:,:,:,:], axis=3)))[:,:,[0,2,1,3]]
-    t_bin, p_bin = stats.ttest_rel(feature_bin[:,0,:], feature_bin[:,1,:], axis=0)
 
     # Plot mean feature change and significance for 4 bins
     plt.subplot(2, 2, order + 3)
@@ -89,8 +83,7 @@ for order in range(2):
                         test='Wilcoxon', text_format='simple', loc='inside', verbose=2, comparisons_correction=None)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
+plt.subplots_adjust(hspace=0.2, wspace=0.2)
 
-# Save figure on group basis
-plt.savefig(f"../../../Plots/speed_order.png", format="png", bbox_inches="tight")
 
 plt.show()

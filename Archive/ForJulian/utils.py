@@ -1,3 +1,5 @@
+# Collection of helper function
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import zscore
@@ -5,6 +7,60 @@ from mne_bids import BIDSPath
 import mne
 import itertools
 from typing import Sequence
+
+
+def plot_conds(array, var=None):
+    """array = (conds x blocks x trials)
+    Plot data divided into two conditions, if given add the variance as shaded area"""
+    # Plot without the first 5 movements
+    plt.plot(array[0, :, :].flatten()[5:], label="slow", color="blue", linewidth=3)
+    plt.plot(array[1, :, :].flatten()[5:], label="fast", color="red", linewidth=3)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # Add line at 0
+    plt.axhline(0, linewidth=2, color="black")
+    x = np.arange(len(array[0, :, :].flatten()[5:]))
+    # add variance as shaded area
+    if var is not None:
+        plt.fill_between(x, array[0, :, :].flatten()[5:] - var[0, :, :].flatten()[5:], array[0, :, :].flatten()[5:] + var[0, :, :].flatten()[5:]
+                         , color="blue", alpha =0.5)
+        plt.fill_between(x, array[1, :, :].flatten()[5:] - var[1, :, :].flatten()[5:],
+                         array[1, :, :].flatten()[5:] + var[1, :, :].flatten()[5:]
+                         , color="red", alpha=0.5)
+
+
+def fill_outliers(array):
+    """Fill outliers in 1D array using the mean of surrounding non-outliers"""
+    # Get index of outliers
+    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
+    idx_non_outlier = np.where(np.abs(zscore(array)) <= 3)[0]
+    # Fill each outlier with mean of closest non outlier
+    for idx in idx_outlier:
+        # Get index of the closest non-outlier before and after
+        where_before = np.where(idx_non_outlier < idx)[0]
+        where_after = np.where(idx_non_outlier > idx)[0]
+        if len(where_before) > 0 and len(where_after) > 0:  # Middle sample
+            array[idx] = np.mean([array[idx_non_outlier[where_before[-1]]], array[idx_non_outlier[where_after[0]]]])
+        elif len(where_before) == 0 and len(where_after) > 0:  # First sample
+            array[idx] = np.mean([array[idx_non_outlier[where_after[1]]], array[idx_non_outlier[where_after[0]]]])
+        elif len(where_before) > 0 and len(where_after) == 0:  # Last sample
+            array[idx] = np.mean([array[idx_non_outlier[where_before[-2]]], array[idx_non_outlier[where_before[-1]]]])
+    return array
+
+
+def norm_perc(array):
+    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
+    mean_start = np.mean(array[..., 0, 5:10], axis=-1)[..., np.newaxis, np.newaxis]
+    array_norm_perc = ((array - mean_start) / mean_start) * 100
+    return array_norm_perc
+
+
+def smooth_moving_average(array, window_size=5, axis=2):
+    """Return the smoothed array where values are averaged in a moving window along the given axis"""
+    box = np.ones(window_size) / window_size
+    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='valid'), axis=axis, arr=array)
+    return array_smooth
+
 
 def norm_0_1(array):
     """Return array normalized to values between 0 and 1"""
@@ -18,13 +74,6 @@ def norm_speed(array):
     # and recovery block
     array_norm = array - np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
     return array_norm
-
-
-def norm_perc(array):
-    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
-    mean_start = np.mean(array[..., 0, 5:10], axis=-1)[..., np.newaxis, np.newaxis]
-    array_norm_perc = ((array - mean_start) / mean_start) * 100
-    return array_norm_perc
 
 
 def reshape_data_trials(raw_data):
@@ -48,13 +97,6 @@ def reshape_data_trials(raw_data):
             cond = int(np.unique(data[-1, mask]))
             data_trials[cond, block_type, i_trial - 1, :, :trial_length] = data[:, mask]
     return data_trials
-
-
-def smooth_moving_average(array, window_size=5, axis=2):
-    """Return the smoothed array where values are averaged in a moving window"""
-    box = np.ones(window_size) / window_size
-    array_smooth = np.apply_along_axis(lambda m: np.convolve(m, box, mode='valid'), axis=axis, arr=array)
-    return array_smooth
 
 
 def moving_variance(array, window_size=15):
@@ -144,45 +186,6 @@ def get_variability(array, window=5):
     for trial in range(95):
         var_array[:, :, trial] = np.mean(np.abs(array[:, :, trial,:1000] - array[:, :, trial+1,:1000]), axis=2)
     return var_array
-
-
-def plot_conds(array, var=None):
-    """array = (conds x blocks x trials)
-    Plot data divided into two conditions, if given add the variance as shaded area"""
-    # Plot without the first 5 movements
-    plt.plot(array[0, :, :].flatten()[5:], label="slow", color="blue", linewidth=3)
-    plt.plot(array[1, :, :].flatten()[5:], label="fast", color="red", linewidth=3)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    # Add line at 0
-    plt.axhline(0, linewidth=2, color="black")
-    x = np.arange(len(array[0, :, :].flatten()[5:]))
-    # add variance as shaded area
-    if var is not None:
-        plt.fill_between(x, array[0, :, :].flatten()[5:] - var[0, :, :].flatten()[5:], array[0, :, :].flatten()[5:] + var[0, :, :].flatten()[5:]
-                         , color="blue", alpha =0.5)
-        plt.fill_between(x, array[1, :, :].flatten()[5:] - var[1, :, :].flatten()[5:],
-                         array[1, :, :].flatten()[5:] + var[1, :, :].flatten()[5:]
-                         , color="red", alpha=0.5)
-
-
-def fill_outliers(array):
-    """Fill outliers in 1D array using the mean of surrounding non-outliers"""
-    # Get index of outliers
-    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
-    idx_non_outlier = np.where(np.abs(zscore(array)) <= 3)[0]
-    # Fill each outlier with mean of closest non outlier
-    for idx in idx_outlier:
-        # Get index of the closest non-outlier before and after
-        where_before = np.where(idx_non_outlier < idx)[0]
-        where_after = np.where(idx_non_outlier > idx)[0]
-        if len(where_before) > 0 and len(where_after) > 0:  # Middle sample
-            array[idx] = np.mean([array[idx_non_outlier[where_before[-1]]], array[idx_non_outlier[where_after[0]]]])
-        elif len(where_before) == 0 and len(where_after) > 0:  # First sample
-            array[idx] = np.mean([array[idx_non_outlier[where_after[1]]], array[idx_non_outlier[where_after[0]]]])
-        elif len(where_before) > 0 and len(where_after) == 0:  # Last sample
-            array[idx] = np.mean([array[idx_non_outlier[where_before[-2]]], array[idx_non_outlier[where_before[-1]]]])
-    return array
 
 
 def get_bids_filepath(root, subject, task, med):
