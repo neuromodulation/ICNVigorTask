@@ -1,4 +1,4 @@
-# Correlation between time of stimulation and peak speed
+# Analysis of tiem of stimulation
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,20 +13,56 @@ import seaborn as sb
 from scipy import stats
 import matplotlib
 from scipy.stats import pearsonr, spearmanr
+from scipy.io import loadmat
+import os
 matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
+
+matlab_files_root = "C:\\Users\\alessia\\Documents\\Jobs\ICN\\vigor-stim\\Data\\behavioral_data\\"
 
 # Set analysis parameters
 plot_individual = False
 datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
-# Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
-peak_speed = peak_speed[datasets, :, :, :]
+# Loop over all datasets
+for filename in os.listdir(matlab_files_root):
 
-# Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
+    # Load behavioral data
+    data = loadmat(os.path.join(matlab_files_root, filename))
+    data = data["struct"][0][0][1]
+
+    # Determine the condition based on the filename
+    slow_first = 1 if filename.index("Slow") < filename.index("Fast") else 0
+
+    # Extract the relative time of stimulation for each movement
+    # At how much % of the movement the stimulation started
+    n_trials = 96
+    feature = np.zeros((2, 2, n_trials))
+    for i_block in range(1, 5):
+        block_type = 0 if i_block in [1, 3] else 1
+        cond = 0 if i_block in [1, 2] and slow_first or i_block in [3, 4] and not slow_first else 1
+        for i_trial in range(1, n_trials + 1):
+            mask = np.where(np.logical_and(data[:, 7] == i_block, data[:, 8] == i_trial))
+            data_move = np.squeeze(data[mask, :])
+            # Get index of peak speed
+            idx_peak_speed = np.argmax(data_move[:, 3])
+            # Get idx of movement onset and offset (closest sample to peak below threshold)
+            move_thres = 500
+            onset_idx = np.where(data_move[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_move[:, 3] < move_thres)) > 0)[1][-1]]
+            offset_idx = np.where(data_move[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_move[:, 3] < move_thres)) < 0)[1][0]]
+            # Compute different things tomorrow
+
+            plt.figure()
+            plt.plot(data_move[:,3].ravel())
+            plt.axvline(onset_idx)
+            plt.axvline(offset_idx)
+            plt.show()
+
+
+
+    # Detect and fill outliers (e.g. when subject did not touch the screen)
+    np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 
 # Normalize to the start of each stimulation block
 peak_speed = utils.norm_perc(peak_speed)
