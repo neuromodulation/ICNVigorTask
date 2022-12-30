@@ -1,5 +1,6 @@
 # Correlation between peak speed of stimulated movement and peak speed of subsequent movement
 # binned
+# Peak speed of stimulated movements over time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,7 +40,7 @@ stim_time = stim_time[datasets, :, :, :]
 plt.figure(figsize=(15, 5))
 cond_names = ["Slow", "Fast"]
 for cond in range(2):
-    plt.subplot(1, 2, cond+1)
+    plt.subplot(2, 2, cond+1)
     stim_cond = stim_time[:, cond, 0, :]
     peak_speed_cond = peak_speed[:, cond, 0, :]
     # Get stim idx
@@ -58,12 +59,6 @@ for cond in range(2):
     # Correlate
     corr, p = spearmanr(peak_speed_sub.ravel(), peak_speed_stim.ravel())
     sb.regplot(peak_speed_sub.ravel(), peak_speed_stim.ravel())
-    #
-    stim_cond = stim_time[:, cond, 1, :]
-    peak_speed_cond = peak_speed[:, cond, 1, :]
-    corr, p = spearmanr(peak_speed_cond[:,1:].ravel(), peak_speed_cond[:,:-1].ravel())
-    sb.regplot(peak_speed_cond[:,1:].ravel(), peak_speed_cond[:,:-1].ravel())
-
     plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr, 2)}, p = {np.round(p, 4)}", fontweight='bold')
     plt.ylabel(f"$\Delta$ peak speed of subsequent move in %", fontsize=14)
     plt.xlabel(f"$\Delta$ peak speed of stimulated move in %", fontsize=14)
@@ -71,6 +66,6 @@ for cond in range(2):
     plt.yticks(fontsize=12)
     plt.subplots_adjust(bottom=0.15, hspace=0.2)
 
-plt.savefig(f"../../../Plots/corr_stim_speed_sub_speed.png", format="png", bbox_inches="tight")
+#plt.savefig(f"../../../Plots/corr_stim_speed_sub_speed.png", format="png", bbox_inches="tight")
 
 plt.show()
