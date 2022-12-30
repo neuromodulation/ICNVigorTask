@@ -60,18 +60,20 @@ plt.figure()
 for cond in range(2):
     # Plot average speed
     x = np.arange(len(peak_speed_mean))
-    plt.plot(peak_speed_mean[:,cond].ravel(), label=cond_names[cond], color=colors[cond])
+    plt.plot(peak_speed_mean[:,cond].ravel(), label=cond_names[cond]+" All move", color=colors[cond])
     # Plot std
     plt.fill_between(x, peak_speed_mean[:,cond].ravel() - peak_speed_std[:,cond].ravel(),
                      peak_speed_mean[:,cond].ravel() + peak_speed_std[:,cond].ravel()
                      , alpha=0.5, color=colors[cond])
-    plt.plot(peak_speed_stim_mean[:, cond].ravel(), label=cond_names[cond], color="dark"+colors[cond])
+    plt.plot(peak_speed_stim_mean[:, cond].ravel(), label=cond_names[cond]+" Stim only", color="dark"+colors[cond])
     # Plot std
     plt.fill_between(x, peak_speed_stim_mean[:, cond].ravel() - peak_speed_stim_std[:, cond].ravel(),
                      peak_speed_stim_mean[:, cond].ravel() + peak_speed_stim_std[:, cond].ravel()
                      , alpha=0.5, color="dark"+colors[cond])
 
-
-#plt.savefig(f"../../../Plots/corr_stim_speed.png", format="png", bbox_inches="tight")
+plt.legend()
+plt.ylabel(f"$\Delta$ peak speed in % (averaged in bin)", fontsize=12)
+plt.xlabel("Bin number", fontsize=12)
+plt.savefig(f"../../../Plots/peak_speed_stim_only.png", format="png", bbox_inches="tight")
 
 plt.show()
