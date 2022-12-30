@@ -23,7 +23,7 @@ matlab_files_root = "C:\\Users\\alessia\\Documents\\Jobs\ICN\\vigor-stim\\Data\\
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "peak_speed_time" # out of ["peak_speed", "stim_time", "peak_speed_time"]
+feature_name = "move_onset_time" # out of ["peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 
 feature_all = []
 # Loop over all files in folder
@@ -44,10 +44,10 @@ for filename in os.listdir(matlab_files_root):
         cond = 0 if i_block in [1, 2] and slow_first or i_block in [3, 4] and not slow_first else 1
         for i_trial in range(1, n_trials+1):
             mask = np.where(np.logical_and(data[:,7] == i_block, data[:,8] == i_trial))
+            data_mask = np.squeeze(data[mask, :])
             if feature_name == "peak_speed":
                 feature[cond, block_type, i_trial - 1] = np.max(data[mask, 3])
             elif feature_name == "stim_time":
-                data_mask = np.squeeze(data[mask, :])
                 idx_stim = np.where(data_mask[:, 10] == 1)[0]
                 if len(idx_stim) > 0:
                     stim_time = data_mask[idx_stim[0], 2] - data_mask[0, 2]
@@ -55,9 +55,24 @@ for filename in os.listdir(matlab_files_root):
                     stim_time = None
                 feature[cond, block_type, i_trial - 1] = stim_time
             elif feature_name == "speed_peak_time":
-                data_mask = np.squeeze(data[mask, :])
                 peak_idx = np.argmax(data_mask[:, 3])
                 feature[cond, block_type, i_trial - 1] = data_mask[peak_idx, 2] - data_mask[0, 2]
+            elif feature_name == "move_onset_time":
+                # Get index of peak speed
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                # Get idx of movement onset (closest sample to peak below threshold)
+                move_thres = 500
+                onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
+                    np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                feature[cond, block_type, i_trial - 1] = data_mask[onset_idx, 2] - data_mask[0, 2]
+            elif feature_name == "move_offset_time":
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                move_thres = 500
+                try:
+                    offset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
+                except:
+                    offset_idx = data_mask.shape[0] - 1
+                feature[cond, block_type, i_trial - 1] = data_mask[offset_idx, 2] - data_mask[0, 2]
 
     # Save the feature values for all datasest
     feature_all.append(feature)
