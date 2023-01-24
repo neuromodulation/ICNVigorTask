@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import gc
-import ICNVigorTask.utils.utils as utils
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
@@ -24,7 +24,7 @@ plot_individual = False
 datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
+peak_speed = np.load(f"../../Data/peak_speed.npy")
 peak_speed = peak_speed[datasets, :, :, :]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -34,7 +34,7 @@ np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 peak_speed = utils.norm_perc(peak_speed)
 
 # Load stim time matrix
-stim_time = np.load(f"../../../Data/stim_time.npy")
+stim_time = np.load(f"../../Data/stim_time.npy")
 stim_time = stim_time[datasets, :, :, :]
 
 plt.figure(figsize=(15, 5))
@@ -58,7 +58,7 @@ for cond in range(2):
     peak_speed_stim = peak_speed_cond[tuple(idx_stim)]
     # Correlate
     corr, p = spearmanr(peak_speed_sub.ravel(), peak_speed_stim.ravel())
-    sb.regplot(peak_speed_sub.ravel(), peak_speed_stim.ravel())
+    sb.regplot(x=peak_speed_sub.ravel(), y=peak_speed_stim.ravel())
     plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr, 2)}, p = {np.round(p, 4)}", fontweight='bold')
     plt.ylabel(f"$\Delta$ peak speed of subsequent move in %", fontsize=14)
     plt.xlabel(f"$\Delta$ peak speed of stimulated move in %", fontsize=14)
@@ -66,6 +66,6 @@ for cond in range(2):
     plt.yticks(fontsize=12)
     plt.subplots_adjust(bottom=0.15, hspace=0.2)
 
-#plt.savefig(f"../../../Plots/corr_stim_speed_sub_speed.png", format="png", bbox_inches="tight")
+plt.savefig(f"../../Plots/corr_stim_speed_sub_speed.png", format="png", bbox_inches="tight")
 
 plt.show()

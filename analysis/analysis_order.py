@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import gc
-import ICNVigorTask.utils.utils as utils
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
@@ -21,12 +21,12 @@ plot_individual = False
 datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
+peak_speed = np.load(f"../../Data/peak_speed.npy")
 peak_speed = peak_speed[datasets,:,:,:]
 n_trials = peak_speed.shape[3]
 
 # Load orderition order
-slow_first = np.load(f"../../../Data/slow_first.npy")
+slow_first = np.load(f"../../Data/slow_first.npy")
 slow_first = slow_first[datasets]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -91,6 +91,6 @@ for order in range(2):
     plt.yticks(fontsize=12)
 
 # Save figure on group basis
-plt.savefig(f"../../../Plots/speed_order.png", format="png", bbox_inches="tight")
+plt.savefig(f"../../Plots/speed_order.png", format="png", bbox_inches="tight")
 
 plt.show()

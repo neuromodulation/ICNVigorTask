@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import gc
-import ICNVigorTask.utils.utils as utils
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
@@ -19,11 +19,11 @@ matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
 
-matlab_files_root = "C:\\Users\\alessia\\Documents\\Jobs\ICN\\vigor-stim\\Data\\behavioral_data\\"
+matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "move_onset_time" # out of ["peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "move_offset_time" # out of ["peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 
 feature_all = []
 # Loop over all files in folder
@@ -94,6 +94,6 @@ for filename in os.listdir(matlab_files_root):
 feature_all = np.array(feature_all)
 
 # Save matrix
-np.save(f"../../../Data/{feature_name}.npy", feature_all)
+np.save(f"../../Data/{feature_name}.npy", feature_all)
 
 plt.show()

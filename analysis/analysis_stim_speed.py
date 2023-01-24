@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import gc
-import ICNVigorTask.utils.utils as utils
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
@@ -19,10 +19,16 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 plot_individual = False
-datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+med = "on"  # "on", "off", "all"
+if all:
+    datasets = np.range(26)
+elif med == "off":
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+else:
+    datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
 # Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
+peak_speed = np.load(f"../../Data/peak_speed.npy")
 peak_speed = peak_speed[datasets, :, :, :]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -32,7 +38,7 @@ np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 peak_speed = utils.norm_perc(peak_speed)
 
 # Load stim time matrix
-stim_time = np.load(f"../../../Data/stim_time.npy")
+stim_time = np.load(f"../../Data/stim_time.npy")
 stim_time = stim_time[datasets, :, :, :]
 
 # Get index of not stimulated movements
@@ -48,6 +54,7 @@ peak_speed_stim = peak_speed_stim[:, :, 0, :]
 bins = 12
 peak_speed_bin = np.array([np.nanmean(arr, axis=2) for arr in np.array_split(peak_speed, bins, axis=2)])
 peak_speed_stim_bin = np.array([np.nanmean(arr, axis=2) for arr in np.array_split(peak_speed_stim, bins, axis=2)])
+#peak_speed_stim_bin = np.array([np.nanvar(arr, axis=2) for arr in np.array_split(peak_speed_stim, bins, axis=2)])
 
 # Compute mean over datasets
 peak_speed_mean = np.nanmean(peak_speed_bin, axis=0)
@@ -74,6 +81,6 @@ for cond in range(2):
 plt.legend()
 plt.ylabel(f"$\Delta$ peak speed in % (averaged in bin)", fontsize=12)
 plt.xlabel("Bin number", fontsize=12)
-plt.savefig(f"../../../Plots/peak_speed_stim_only.png", format="png", bbox_inches="tight")
+plt.savefig(f"../../Plots/peak_speed_stim_only_{med}.png", format="png", bbox_inches="tight")
 
 plt.show()

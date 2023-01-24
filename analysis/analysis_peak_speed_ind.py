@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mne
 import gc
-import ICNVigorTask.utils.utils as utils
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 from alive_progress import alive_bar
 import time
@@ -19,23 +19,24 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 # Define which datasets to include based on Dataset_list.csv
 # Only OFF (one for each subject)
-datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+datasets = np.arange(26)#[0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
 
 # Load peak speed matrix
-peak_speed = np.load(f"../../../Data/peak_speed.npy")
+peak_speed = np.load(f"../../Data/peak_speed.npy")
 
 # Select peak speeds of interest
 peak_speed = peak_speed[datasets, :, :, :]
 n_trials = peak_speed.shape[3]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
+#np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
 
 # Normalize to the start of each stimulation block (mean peak speed of movement 5-10)
-peak_speed = utils.norm_perc(peak_speed)
+#peak_speed = utils.norm_perc(peak_speed)
 
 # Smooth over 5 consecutive movements for plotting
-peak_speed_smooth = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
+#peak_speed_smooth = utils.smooth_moving_average(peak_speed, window_size=5, axis=3)
+peak_speed_smooth = peak_speed
 
 # Plot individual dataset and perform significance test
 for i, (peak_speed_ind, peak_speed_smooth_ind) in enumerate(zip(peak_speed, peak_speed_smooth)):
@@ -77,6 +78,6 @@ for i, (peak_speed_ind, peak_speed_smooth_ind) in enumerate(zip(peak_speed, peak
     plt.suptitle(f"Dataset Nr. {datasets[i]+1}")
 
     # Save figure
-    plt.savefig(f"../../../Plots/speed_dataset_{datasets[i]+1}.png", format="png", bbox_inches="tight")
+    plt.savefig(f"../../Plots/speed_dataset_{datasets[i]+1}.png", format="png", bbox_inches="tight")
 
 plt.show()
