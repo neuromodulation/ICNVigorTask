@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "move_offset_time" # out of ["peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_acc" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 
 feature_all = []
 # Loop over all files in folder
@@ -47,6 +47,8 @@ for filename in os.listdir(matlab_files_root):
             data_mask = np.squeeze(data[mask, :])
             if feature_name == "peak_speed":
                 feature[cond, block_type, i_trial - 1] = np.max(data[mask, 3])
+            elif feature_name == "peak_acc":
+                feature[cond, block_type, i_trial - 1] = np.max(np.diff(data[mask, 3]))
             elif feature_name == "stim_time":
                 idx_stim = np.where(data_mask[:, 10] == 1)[0]
                 if len(idx_stim) > 0:
@@ -73,6 +75,28 @@ for filename in os.listdir(matlab_files_root):
                 except:
                     offset_idx = data_mask.shape[0] - 1
                 feature[cond, block_type, i_trial - 1] = data_mask[offset_idx, 2] - data_mask[0, 2]
+            elif feature_name == "move_dur":
+                # Get index of peak speed
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                # Get idx of movement onset and offset (closest sample to peak below threshold)
+                move_thres = 300
+                try:
+                    onset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                    offset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
+                    feature[cond, block_type, i_trial - 1] = data_mask[offset_idx, 2] - data_mask[onset_idx, 2]
+                except:
+                    feature[cond, block_type, i_trial - 1] = None
+            elif feature_name == "mean_speed":
+                # Get index of peak speed
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                # Get idx of movement onset and offset (closest sample to peak below threshold)
+                move_thres = 300
+                try:
+                    onset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                    offset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
+                    feature[cond, block_type, i_trial - 1] = np.mean(data_mask[onset_idx:offset_idx, 3])
+                except:
+                    feature[cond, block_type, i_trial - 1] = None
 
     # Save the feature values for all datasest
     feature_all.append(feature)

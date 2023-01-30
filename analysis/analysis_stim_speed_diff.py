@@ -1,4 +1,4 @@
-# Plot speed of stimulated movements over time
+# Plot difference of speed of stimulated movements to mean of all movements over time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 plot_individual = False
 med = "on"  # "on", "off", "all"
-if all:
+if med == "all":
     datasets = np.range(26)
 elif med == "off":
     datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
@@ -52,9 +52,8 @@ peak_speed_stim = peak_speed_stim[:, :, 0, :]
 
 # Calculate average speed of stimulated movements in bins
 bins = 12
-peak_speed_bin = np.array([np.nanmedian(arr, axis=2) for arr in np.array_split(peak_speed, bins, axis=2)])
-peak_speed_stim_bin = np.array([np.nanmedian(arr, axis=2) for arr in np.array_split(peak_speed_stim, bins, axis=2)])
-#peak_speed_stim_bin = np.array([np.nanvar(arr, axis=2) for arr in np.array_split(peak_speed_stim, bins, axis=2)])
+peak_speed_bin = np.array([np.nanmean(arr, axis=2) for arr in np.array_split(peak_speed, bins, axis=2)])
+peak_speed_stim_bin = np.array([np.nanmean(arr, axis=2) for arr in np.array_split(peak_speed_stim, bins, axis=2)])
 
 # Compute mean over datasets
 peak_speed_mean = np.nanmean(peak_speed_bin, axis=0)
@@ -65,22 +64,13 @@ cond_names = ["Slow", "Fast"]
 colors = ["blue", "red"]
 plt.figure()
 for cond in range(2):
-    # Plot average speed
+    # Plot difference in average speed
     x = np.arange(len(peak_speed_mean))
-    plt.plot(peak_speed_mean[:,cond].ravel(), label=cond_names[cond]+" All move", color=colors[cond])
-    # Plot std
-    plt.fill_between(x, peak_speed_mean[:,cond].ravel() - peak_speed_std[:,cond].ravel(),
-                     peak_speed_mean[:,cond].ravel() + peak_speed_std[:,cond].ravel()
-                     , alpha=0.5, color=colors[cond])
-    plt.plot(peak_speed_stim_mean[:, cond].ravel(), label=cond_names[cond]+" Stim only", color="dark"+colors[cond])
-    # Plot std
-    plt.fill_between(x, peak_speed_stim_mean[:, cond].ravel() - peak_speed_stim_std[:, cond].ravel(),
-                     peak_speed_stim_mean[:, cond].ravel() + peak_speed_stim_std[:, cond].ravel()
-                     , alpha=0.5, color="dark"+colors[cond])
+    plt.plot(peak_speed_stim_mean[:, cond].ravel() - peak_speed_mean[:,cond].ravel(), label=cond_names[cond]+" All move", color=colors[cond])
 
 plt.legend()
 plt.ylabel(f"$\Delta$ peak speed in % (averaged in bin)", fontsize=12)
 plt.xlabel("Bin number", fontsize=12)
-plt.savefig(f"../../Plots/peak_speed_stim_only_{med}.png", format="png", bbox_inches="tight")
+plt.savefig(f"../../Plots/peak_speed_stim_diff_{med}.png", format="png", bbox_inches="tight")
 
 plt.show()

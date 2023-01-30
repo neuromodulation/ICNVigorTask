@@ -166,7 +166,23 @@ def plot_conds(array, var=None):
                          , color="red", alpha=0.5)
 
 
-def fill_outliers(array):
+def plot_bins(array, std=None):
+    """array = (bins x conditions)
+    Plot data divided into two conditions, if given add the standard deviation as shaded area"""
+    # Plot without the first 5 movements
+    plt.plot(array[:, 0], label="slow", color="blue", linewidth=3)
+    plt.plot(array[:, 1], label="fast", color="red", linewidth=3)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # Add line at 0
+    plt.axhline(0, linewidth=2, color="black")
+    x = np.arange(array.shape[0])
+    # add variance as shaded area
+    if std is not None:
+        plt.fill_between(x, array[:, 0] - std[:, 0], array[:, 0] + std[:, 0], color="blue", alpha=0.5)
+        plt.fill_between(x, array[:, 1] - std[:, 1], array[:, 1] + std[:, 1], color="red", alpha=0.5)
+
+def fill_outliers_mean(array):
     """Fill outliers in 1D array using the mean of surrounding non-outliers"""
     # Get index of outliers
     idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
@@ -182,6 +198,15 @@ def fill_outliers(array):
             array[idx] = np.mean([array[idx_non_outlier[where_after[1]]], array[idx_non_outlier[where_after[0]]]])
         elif len(where_before) > 0 and len(where_after) == 0:  # Last sample
             array[idx] = np.mean([array[idx_non_outlier[where_before[-2]]], array[idx_non_outlier[where_before[-1]]]])
+    return array
+
+
+def fill_outliers_nan(array):
+    """Fill outliers in 1D array with nan"""
+    # Get index of outliers
+    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
+    # Fill each outlier with mean of closest non outlier
+    array[idx_outlier] = None
     return array
 
 
