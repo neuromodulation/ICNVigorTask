@@ -27,8 +27,8 @@ else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
 # Load peak speed matrix
-move_onset_time = np.load(f"../../Data/move_onset_time.npy")
-move_offset_time = np.load(f"../../Data/move_offset_time.npy")
+move_onset_time = np.load(f"../../../Data/move_onset_time.npy")
+move_offset_time = np.load(f"../../../Data/move_offset_time.npy")
 
 # Calculate movement duration
 move_dur = move_offset_time - move_onset_time

@@ -1,5 +1,4 @@
-# Script for plotting of features averaged in block
-
+# Script for plotting of features averaged in bins
 import numpy as np
 import matplotlib.pyplot as plt
 import mne
@@ -19,7 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_acc"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 property = "median"  # ["median", "std"]
 plot_individual = False
 med = "off"  # "on", "off", "all"

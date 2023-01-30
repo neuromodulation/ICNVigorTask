@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 plot_individual = False
-med = "all"  # "on", "off", "all"
+med = "on"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
@@ -27,10 +27,9 @@ elif med == "off":
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
-
 # Load stim time matrix
 stim_time = np.load(f"../../Data/stim_time.npy")
-stim_time = stim_time[datasets, :, :, 5:]
+stim_time = stim_time[datasets, :, :, 3:]
 
 # Extract whether a trial was stimulated or not
 stim = stim_time.copy()
@@ -38,7 +37,7 @@ stim[np.isnan(stim)] = 0
 stim[np.nonzero(stim)] = 1
 
 # Bin number of stimulated movements
-bins = 12
+bins = 10
 n_stim = np.array([np.mean(arr, axis=3)*100 for arr in np.array_split(stim, bins, axis=3)])
 n_stim_mean = np.mean(n_stim, axis=1)
 n_stim_std = np.std(n_stim, axis=1)
@@ -50,7 +49,7 @@ plt.figure()
 for cond in range(2):
     # Plot average speed
     x = np.arange(len(n_stim))
-    plt.plot(n_stim_mean[:, cond, 0], label=cond_names[cond]+" All move", color=colors[cond], linewidth=3)
+    plt.plot(n_stim_mean[:, cond, 0], label=cond_names[cond], color=colors[cond], linewidth=3)
     # Plot std
     plt.fill_between(x, n_stim_mean[:, cond, 0] - n_stim_std[:, cond, 0],
                      n_stim_mean[:, cond, 0] + n_stim_std[:, cond, 0]

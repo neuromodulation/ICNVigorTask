@@ -1,4 +1,5 @@
-# Correlation between number of stimulated movements and peak speed
+# Plot feature 3 moves after a stimulated movement
+# TODO: Permutation test
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "move_dur"
+feature_name = "peak_acc"
 plot_individual = False
 med = "off"
 if med == "all":
@@ -55,28 +56,33 @@ stim = np.reshape(stim, (n_datasets, 2, n_trials*2))
 feature_matrix = feature_matrix[:, :, 3:]
 stim = stim[:, :, 3:]
 
-# Bin number of stimulated movements and feature matrix
-bins = 21
-n_stim = np.array([np.nanmean(arr, axis=2)*100 for arr in np.array_split(stim, bins, axis=2)])
-feature_bin = np.array([np.nanmedian(arr, axis=2) for arr in np.array_split(feature_matrix, bins, axis=2)])
-
-# Normalize to first bin and transform into percentage
-feature_bin = ((feature_bin - feature_bin[0, :, :]) / feature_bin[0, :, :]) * 10
-
-# Plot as scatter plot and compute correlation for each condition
+# Loop over conditions
+colors = ["blue", "red"]
 cond_names = ["Slow", "Fast"]
-plt.figure(figsize=(12, 5))
+plt.figure(figsize=(10,5))
 for cond in range(2):
-    plt.subplot(1, 2, cond+1)
-    corr, p = spearmanr(feature_bin[1:11, :, cond].ravel(), n_stim[:10, :, cond].ravel())
-    sb.regplot(x=feature_bin[:10, :, cond].ravel(), y=n_stim[:10, :, cond].ravel())
-    plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr,2)}, p = {np.round(p,3)}", fontweight='bold')
-    plt.xlabel(f"change in {feature_name}", fontsize=14)
-    plt.ylabel(f"% of stimulated movements in bin", fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.subplots_adjust(bottom=0.15, hspace=0.2)
+    subsequent_moves = []
+    for dataset in range(n_datasets):
+        # Get index of stimulated movements
+        stim_idx = np.where(stim[dataset, cond,:] == 1)[0]
+        stim_idx = stim_idx[stim_idx < 93]
+        #stim_idx = np.random.randint(0, 93, 22)
+        # Extract feature of three consecutive movement
+        for idx in stim_idx:
+            # Calculate percentage change from stimulated movement
+            diff_perc = ((feature_matrix[dataset, cond, idx:idx + 4] - feature_matrix[dataset, cond, idx]) /
+                         feature_matrix[dataset, cond, idx]) * 100
+            subsequent_moves.append(diff_perc)
+    # Average over movements and datasets
+    subsequent_moves_mean = np.nanmedian(np.array(subsequent_moves), axis=0)
+    # Plot as bars
+    plt.plot(subsequent_moves_mean, color=colors[cond], label=cond_names[cond], linewidth=3)
 
-plt.savefig(f"../../Plots/corr_n_stim_{feature_name}_{med}.png", format="png", bbox_inches="tight")
+plt.axhline(0, color="grey", linewidth=1)
+plt.ylabel(f"% change in {feature_name}", fontsize=11)
+plt.xlabel("Move after stim", fontsize=14)
+plt.legend()
+
+plt.savefig(f"../../Plots/{feature_name}_after_stim_{med}.png", format="png", bbox_inches="tight")
 
 plt.show()
