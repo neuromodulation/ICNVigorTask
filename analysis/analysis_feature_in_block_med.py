@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_speed"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 property = "median"  # ["median", "std"]
 plot_individual = False
 
@@ -53,12 +53,27 @@ colors = ["blue", "red"]
 plt.figure(figsize=(12, 5))
 for cond in range(2):
     plt.subplot(2, 1, cond+1)
+
     # Plot med off
-    plt.plot(np.median(feature_bin_median[:, datasets_off, cond], axis=1),
-                    linestyle='solid', color=colors[cond], label="Off", linewidth=2)
+    x = np.arange(n_bins)
+    off = feature_bin_median[:, datasets_off, cond]
+    plt.plot(np.median(off, axis=1), linestyle='solid', color=colors[cond], label="Off", linewidth=2)
+    # Add std as shaded area
+    plt.fill_between(x, np.median(off, axis=1) - np.std(off, axis=1), np.median(off, axis=1) + np.std(off, axis=1), color=colors[cond], alpha=0.5)
+
     # Plot med on
-    plt.plot(np.median(feature_bin_median[:, datasets_on, cond], axis=1),
-                    linestyle="dashed", color=colors[cond], label="On", linewidth=2)
+    on = feature_bin_median[:, datasets_on, cond]
+    plt.plot(np.median(on, axis=1), linestyle='dashed', color=f"dark{colors[cond]}", label="Off", linewidth=2)
+    # Add std as shaded area
+    plt.fill_between(x, np.median(on, axis=1) - np.std(on, axis=1), np.median(on, axis=1) + np.std(on, axis=1), color=f"dark{colors[cond]}", alpha=0.5)
+
+    # Add statistics
+    for bin in range(1, n_bins):
+        z, p = scipy.stats.wilcoxon(x=feature_bin_median[bin, datasets_on, cond], y=feature_bin_median[bin, datasets_off, cond])
+        print(p)
+        if p < 0.05:
+            plt.text(bin + 1, 20, "*", fontsize=15)
+
     if cond == 1: plt.xlabel("# Bin", fontsize=14)
     plt.xticks([])
     plt.ylabel(f"% change in {feature_name}", fontsize=11)

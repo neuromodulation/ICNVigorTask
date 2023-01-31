@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc"
+feature_name = "peak_s"
 plot_individual = False
 med = "off"
 if med == "all":
