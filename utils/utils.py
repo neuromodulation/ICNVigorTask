@@ -21,8 +21,8 @@ def norm_speed(array):
 
 
 def norm_perc(array):
-    """Normalize feature to stimulation block start (mean of trial 5-10) and return as percentage"""
-    mean_start = np.mean(array[..., 0, 5:10], axis=-1)[..., np.newaxis, np.newaxis]
+    """Normalize feature to stimulation block start (mean of trial 0-10) and return as percentage"""
+    mean_start = np.nanmean(array[..., :, :5], axis=-1)[..., np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
@@ -146,41 +146,43 @@ def get_variability(array, window=5):
     return var_array
 
 
-def plot_conds(array, var=None):
-    """array = (conds x blocks x trials)
+def plot_conds(array, var=None, color_slow="#00863b", color_fast="#3b0086"):
+    """array = (conds x trials)
     Plot data divided into two conditions, if given add the variance as shaded area"""
     # Plot without the first 5 movements
-    plt.plot(array[0, :, :].flatten()[5:], label="slow", color="blue", linewidth=3)
-    plt.plot(array[1, :, :].flatten()[5:], label="fast", color="red", linewidth=3)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.plot(array[0, :], label="Slow", color=color_slow, linewidth=3)
+    plt.plot(array[1, :], label="Fast", color=color_fast, linewidth=3)
     # Add line at 0
-    plt.axhline(0, linewidth=2, color="black")
-    x = np.arange(len(array[0, :, :].flatten()[5:]))
-    # add variance as shaded area
+    plt.axhline(0, linewidth=2, color="black", linestyle="dashed")
+    x = np.arange(array.shape[1])
+    # Add variance as shaded area
     if var is not None:
-        plt.fill_between(x, array[0, :, :].flatten()[5:] - var[0, :, :].flatten()[5:], array[0, :, :].flatten()[5:] + var[0, :, :].flatten()[5:]
-                         , color="blue", alpha =0.5)
-        plt.fill_between(x, array[1, :, :].flatten()[5:] - var[1, :, :].flatten()[5:],
-                         array[1, :, :].flatten()[5:] + var[1, :, :].flatten()[5:]
-                         , color="red", alpha=0.5)
+        plt.fill_between(x, array[0, :] - var[0, :], array[0, :] + var[0, :], color=color_slow, alpha=0.2)
+        plt.fill_between(x, array[1, :] - var[1, :], array[1, :] + var[1, :], color=color_fast, alpha=0.2)
 
 
-def plot_bins(array, std=None):
+def plot_bins(array, std=None, color_slow="#00863b", color_fast="#3b0086"):
     """array = (bins x conditions)
     Plot data divided into two conditions, if given add the standard deviation as shaded area"""
     # Plot without the first 5 movements
-    plt.plot(array[:, 0], label="slow", color="blue", linewidth=3)
-    plt.plot(array[:, 1], label="fast", color="red", linewidth=3)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.plot(array[:, 0], label="Slow", color=color_slow, linewidth=3)
+    plt.plot(array[:, 1], label="Fast", color=color_fast, linewidth=3)
     # Add line at 0
-    plt.axhline(0, linewidth=2, color="black")
+    plt.axhline(0, linewidth=1, color="black", linestyle="dashed")
     x = np.arange(array.shape[0])
     # add variance as shaded area
     if std is not None:
-        plt.fill_between(x, array[:, 0] - std[:, 0], array[:, 0] + std[:, 0], color="blue", alpha=0.5)
-        plt.fill_between(x, array[:, 1] - std[:, 1], array[:, 1] + std[:, 1], color="red", alpha=0.5)
+        plt.fill_between(x, array[:, 0] - std[:, 0], array[:, 0] + std[:, 0], color=color_slow, alpha=0.25)
+        plt.fill_between(x, array[:, 1] - std[:, 1], array[:, 1] + std[:, 1], color=color_fast, alpha=0.25)
+
+
+def adjust_plot(fig):
+    # Set font size of tick labels
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    # Set size of figure
+    fig.set_size_inches(5.5, 4)
+
 
 def fill_outliers_mean(array):
     """Fill outliers in 1D array using the mean of surrounding non-outliers"""

@@ -1,4 +1,5 @@
-# Script for plotting of features averaged in bins
+# Script for plotting of features over time
+
 import numpy as np
 import matplotlib.pyplot as plt
 import mne
@@ -18,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "move_dur"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
@@ -41,63 +42,52 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_ma
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
-# Delete the first 3 movements
-feature_matrix = feature_matrix[:, :, 3:]
+# Delete the first 5 movements
+feature_matrix = feature_matrix[:, :, 5:]
 
-# Group into bins: Compute average feature in bin
-n_bins = 24
-feature_bin_median = np.array([np.nanmean(arr, axis=2) for arr in np.array_split(feature_matrix, n_bins, axis=2)])
-feature_bin_std = np.array([np.nanstd(arr, axis=2) for arr in np.array_split(feature_matrix, n_bins, axis=2)])
+# Normalize to average of first 5 movements
+feature_matrix = utils.norm_perc(feature_matrix)
 
-# Normalize to first bin and transform into percentage
-feature_bin_median = ((feature_bin_median - feature_bin_median[0, :, :]) / feature_bin_median[0, :, :]) * 100
+# Smooth over 5 consecutive movements for plotting
+feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)
 
 # Plot individual if needed
 if plot_individual:
     for i in range(n_datasets):
         # Plot feature over time
         plt.figure()
-        utils.plot_bins(feature_bin_median[:,i,:])
-        plt.xlabel("# Bin", fontsize=14)
-        plt.ylabel(f"Change in {property} {feature_name}", fontsize=14)
+        utils.plot_conds(feature_matrix[i,:,:])
+        plt.xlabel("Movement number", fontsize=14)
+        feature_name_space = feature_name.replace("_", " ")
+        plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
         # Save figure on individual basis
-        plt.savefig(f"../../Plots/dataset{i}_{feature_name}_{med}.png", format="png", bbox_inches="tight")
+        plt.savefig(f"../../Plots/dataset_{i}_{feature_name}_{med}.png", format="png", bbox_inches="tight")
         plt.close()
 
 # Average over all datasets
-feature_bin_median_dataset = np.median(feature_bin_median, axis=1)
-feature_bin_std_dataset = np.std(feature_bin_median, axis=1)
+feature_matrix_mean = np.nanmean(feature_matrix, axis=0)
+feature_matrix_std = np.nanstd(feature_matrix, axis=0)
 
 # Plot feature over time
 fig = plt.figure()
-utils.plot_bins(feature_bin_median_dataset, feature_bin_std_dataset)
-plt.xlabel("Number of bin", fontsize=14)
-plt.xlim([0, 20])
-plt.xticks([0,5,10,15,20],["0","5","10","15","20"])
+utils.plot_conds(feature_matrix_mean, feature_matrix_std)
+plt.xlabel("Movement number", fontsize=14)
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
+
 # Add line to mark end of stimulation
-plt.axvline(np.floor(feature_bin_median.shape[0]/2), color="black", linewidth=1)
+n_trials = feature_matrix.shape[-1]
+plt.axvline(n_trials/2, color="black", linewidth=1)
 axes = plt.gca()
 ymin, ymax = axes.get_ylim()
-plt.text(3.5, ymax+2, "Stimulation", rotation=0)
-plt.text(13.5, ymax+2, "Recovery", rotation=0)
+plt.text(25, ymax+2, "Stimulation", rotation=0, fontsize=12)
+plt.text(118, ymax+2, "Recovery", rotation=0, fontsize=12)
+
+# Adjust plot
+plt.xlim([0, n_trials-1])
 plt.subplots_adjust(bottom=0.2, left=0.15)
 utils.adjust_plot(fig)
 plt.legend()
-
-# Add statistics
-p_vals = []
-for i, bin in enumerate(feature_bin_median[1:]):
-    z, p = scipy.stats.wilcoxon(x=bin[:, 0], y=bin[:, 1])
-    #z, p = scipy.stats.ttest_rel(bin[:, 0], bin[:, 1])
-    p_vals.append(p)
-    # Add p value to plot
-    if p < 0.01:
-        plt.text(i+1, 10, "**", fontsize=15)
-    elif p < 0.05:
-        plt.text(i + 1, 10, "*", fontsize=15)
-print(p_vals)
 
 # Save figure on group basis
 plt.savefig(f"../../Plots/{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
