@@ -59,8 +59,12 @@ for i in range(1, 5):
     feature_matrix_mean = np.nanmedian(feature_matrix[:, :, int(45*(i-1)):int(45*i)], axis=2)
 
     # Plot the mean bar
-    plt.bar(bar_pos[i-1]-0.25, np.mean(feature_matrix_mean[:, 0]), color=color_slow, label="Slow", width=0.5, alpha=0.5)
-    plt.bar(bar_pos[i-1]+0.25, np.mean(feature_matrix_mean[:, 1]), color=color_fast, label="Fast", width=0.5, alpha=0.5)
+    if i == 1:
+        plt.bar(bar_pos[i-1]-0.25, np.mean(feature_matrix_mean[:, 0]), color=color_slow, label="Slow", width=0.5, alpha=0.5)
+        plt.bar(bar_pos[i-1]+0.25, np.mean(feature_matrix_mean[:, 1]), color=color_fast, label="Fast", width=0.5, alpha=0.5)
+    else:
+        plt.bar(bar_pos[i - 1] - 0.25, np.mean(feature_matrix_mean[:, 0]), color=color_slow, width=0.5, alpha=0.5)
+        plt.bar(bar_pos[i - 1] + 0.25, np.mean(feature_matrix_mean[:, 1]), color=color_fast, width=0.5, alpha=0.5)
 
     # Plot the individual points
     for dat in feature_matrix_mean:
@@ -75,10 +79,11 @@ for i in range(1, 5):
     plt.text(bar_pos[i-1]-0.5, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig)
 
 # Adjust plot
-plt.xticks(bar_pos, ["First half \n stimulation","Second half \n stimulation", "First half \n recovery", "Second half \n stimulation"], fontsize=14)
+plt.xticks(bar_pos, ["First half \n stimulation","Second half \n stimulation", "First half \n recovery", "Second half \n recovery"], fontsize=14)
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
 plt.subplots_adjust(bottom=0.2, left=0.15)
+plt.legend(loc="upper left")
 utils.adjust_plot(fig)
 axes = plt.gca()
 axes.spines[['right', 'top']].set_visible(False)

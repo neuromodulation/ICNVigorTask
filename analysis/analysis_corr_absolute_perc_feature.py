@@ -50,7 +50,7 @@ feature_matrix = feature_matrix[:, :, 5:]
 feature_matrix_perc = utils.norm_perc(feature_matrix)
 
 # Average over all movements
-feature_mean = np.nanmean(feature_matrix_perc[:, :, :], axis=2)
+feature_mean = np.nanmedian(feature_matrix_perc[:, :, :], axis=2)
 feature_perc_mean = np.nanmean(feature_matrix[:, :, :20], axis=2)
 
 # Correlate absolute speed and change in movement speed

@@ -180,6 +180,8 @@ def adjust_plot(fig):
     plt.yticks(fontsize=12)
     # Set size of figure
     fig.set_size_inches(5.5, 4)
+    axes = plt.gca()
+    axes.spines[['right', 'top']].set_visible(False)
 
 
 def fill_outliers_mean(array, threshold=3):

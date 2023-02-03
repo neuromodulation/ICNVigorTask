@@ -1,5 +1,4 @@
 # Plot feature 3 moves after a stimulated movement
-# TODO: Permutation test
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_s"
+feature_name = "peak_speed"
 plot_individual = False
 med = "off"
 if med == "all":
@@ -53,34 +52,42 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 stim = np.reshape(stim, (n_datasets, 2, n_trials*2))
 
 # Delete the first 3 movements
-feature_matrix = feature_matrix[:, :, 3:]
-stim = stim[:, :, 3:]
+feature_matrix = feature_matrix[:, :, 5:]
+stim = stim[:, :, 5:]
 
 # Loop over conditions
-colors = ["blue", "red"]
+colors = ["#00863b",  "#3b0086"]
 cond_names = ["Slow", "Fast"]
-plt.figure(figsize=(10,5))
+fig = plt.figure()
 for cond in range(2):
     subsequent_moves = []
     for dataset in range(n_datasets):
         # Get index of stimulated movements
-        stim_idx = np.where(stim[dataset, cond,:] == 1)[0]
+        stim_idx = np.where(stim[dataset, cond, :] == 1)[0]
         stim_idx = stim_idx[stim_idx < 93]
-        #stim_idx = np.random.randint(0, 93, 22)
         # Extract feature of three consecutive movement
+        subsequent_moves_dataset = []
         for idx in stim_idx:
             # Calculate percentage change from stimulated movement
             diff_perc = ((feature_matrix[dataset, cond, idx:idx + 4] - feature_matrix[dataset, cond, idx]) /
                          feature_matrix[dataset, cond, idx]) * 100
-            subsequent_moves.append(diff_perc)
+            subsequent_moves_dataset.append(diff_perc)
+        subsequent_moves.append(np.nanmedian(np.array(subsequent_moves_dataset), axis=0))
     # Average over movements and datasets
-    subsequent_moves_mean = np.nanmedian(np.array(subsequent_moves), axis=0)
+    subsequent_moves_mean = np.nanmean(np.array(subsequent_moves), axis=0)
+    subsequent_moves_std = np.nanstd(np.array(subsequent_moves), axis=0)
     # Plot as bars
     plt.plot(subsequent_moves_mean, color=colors[cond], label=cond_names[cond], linewidth=3)
+    # Plot variance
+    plt.fill_between(np.arange(4), subsequent_moves_mean - subsequent_moves_std, subsequent_moves_mean + subsequent_moves_std, color=colors[cond], alpha=0.2)
 
 plt.axhline(0, color="grey", linewidth=1)
-plt.ylabel(f"% change in {feature_name}", fontsize=11)
+feature_name_space = feature_name.replace("_", " ")
+plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
 plt.xlabel("Move after stim", fontsize=14)
+plt.xticks([1, 2, 3], ["1", "2", "3"])
+plt.subplots_adjust(left=0.2, bottom=0.2)
+utils.adjust_plot(fig)
 plt.legend()
 
 plt.savefig(f"../../Plots/{feature_name}_after_stim_{med}.png", format="png", bbox_inches="tight")

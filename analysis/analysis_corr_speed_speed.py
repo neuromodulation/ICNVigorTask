@@ -28,7 +28,7 @@ peak_speed = np.load(f"../../Data/peak_speed.npy")
 peak_speed = peak_speed[datasets, :, :, :]
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=peak_speed)
 
 # Normalize to the start of each stimulation block
 peak_speed = utils.norm_perc(peak_speed)
