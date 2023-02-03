@@ -11,17 +11,15 @@ def norm_0_1(array):
     return (array - np.min(array)) / (np.max(array - np.min(array)))
 
 
-def norm_speed(array):
-    """Normalize speed to stimulation block start
-    array: (2x2x96)(Conditions, Blocks, Trials)"""
-    # Substract the mean of the first 5 movements in each stimulation block from the speed of the subsequent stimulation
-    # and recovery block
-    array_norm = array - np.mean(array[:, 0, 5:10], axis=1)[:, np.newaxis, np.newaxis]
+def norm(array):
+    """Normalize feature to stimulation block start"""
+    mean_start = np.nanmean(array[..., :, :5], axis=-1)[..., np.newaxis]
+    array_norm= array - mean_start
     return array_norm
 
 
 def norm_perc(array):
-    """Normalize feature to stimulation block start (mean of trial 0-10) and return as percentage"""
+    """Normalize feature to stimulation block start and return as percentage"""
     mean_start = np.nanmean(array[..., :, :5], axis=-1)[..., np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
@@ -184,11 +182,11 @@ def adjust_plot(fig):
     fig.set_size_inches(5.5, 4)
 
 
-def fill_outliers_mean(array):
+def fill_outliers_mean(array, threshold=3):
     """Fill outliers in 1D array using the mean of surrounding non-outliers"""
     # Get index of outliers
-    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
-    idx_non_outlier = np.where(np.abs(zscore(array)) <= 3)[0]
+    idx_outlier = np.where(np.abs(zscore(array)) > threshold)[0]
+    idx_non_outlier = np.where(np.abs(zscore(array)) <= threshold)[0]
     # Fill each outlier with mean of closest non outlier
     for idx in idx_outlier:
         # Get index of the closest non-outlier before and after
@@ -203,10 +201,10 @@ def fill_outliers_mean(array):
     return array
 
 
-def fill_outliers_nan(array):
+def fill_outliers_nan(array, threshold=3):
     """Fill outliers in 1D array with nan"""
     # Get index of outliers
-    idx_outlier = np.where(np.abs(zscore(array)) > 3)[0]
+    idx_outlier = np.where(np.abs(zscore(array)) > threshold)[0]
     # Fill each outlier with mean of closest non outlier
     array[idx_outlier] = None
     return array

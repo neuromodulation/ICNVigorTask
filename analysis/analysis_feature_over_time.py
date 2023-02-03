@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "move_dur"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_speed"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
@@ -37,7 +37,7 @@ feature_matrix = feature_matrix[datasets, :, :, :]
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
@@ -80,6 +80,7 @@ n_trials = feature_matrix.shape[-1]
 plt.axvline(n_trials/2, color="black", linewidth=1)
 axes = plt.gca()
 ymin, ymax = axes.get_ylim()
+axes.spines[['right', 'top']].set_visible(False)
 plt.text(25, ymax+2, "Stimulation", rotation=0, fontsize=12)
 plt.text(118, ymax+2, "Recovery", rotation=0, fontsize=12)
 

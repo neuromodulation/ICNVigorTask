@@ -48,48 +48,42 @@ feature_matrix = feature_matrix[:, :, 5:]
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)
 
-# Smooth over 5 consecutive movements for plotting
-feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)
-
-# Plot individual if needed
-if plot_individual:
-    for i in range(n_datasets):
-        # Plot feature over time
-        plt.figure()
-        utils.plot_conds(feature_matrix[i,:,:])
-        plt.xlabel("Movement number", fontsize=14)
-        feature_name_space = feature_name.replace("_", " ")
-        plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
-        # Save figure on individual basis
-        plt.savefig(f"../../Plots/dataset_{i}_{feature_name}_{med}.png", format="png", bbox_inches="tight")
-        plt.close()
-
-# Average over all datasets
-feature_matrix_mean = np.nanmean(feature_matrix, axis=0)
-feature_matrix_std = np.nanstd(feature_matrix, axis=0)
-
-# Plot feature over time
+# Compute significance for first/last half of stimulation/recovery
 fig = plt.figure()
-utils.plot_conds(feature_matrix_mean, feature_matrix_std)
-plt.xlabel("Movement number", fontsize=14)
-feature_name_space = feature_name.replace("_", " ")
-plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
+color_slow = "#00863b"
+color_fast = "#3b0086"
+bar_pos = [1, 2.5, 4, 5.5]
+for i in range(1, 5):
 
-# Add line to mark end of stimulation
-n_trials = feature_matrix.shape[-1]
-plt.axvline(n_trials/2, color="black", linewidth=1)
-axes = plt.gca()
-ymin, ymax = axes.get_ylim()
-plt.text(25, ymax+2, "Stimulation", rotation=0, fontsize=12)
-plt.text(118, ymax+2, "Recovery", rotation=0, fontsize=12)
+    # Median over all movements in that period
+    feature_matrix_mean = np.nanmedian(feature_matrix[:, :, int(45*(i-1)):int(45*i)], axis=2)
+
+    # Plot the mean bar
+    plt.bar(bar_pos[i-1]-0.25, np.mean(feature_matrix_mean[:, 0]), color=color_slow, label="Slow", width=0.5, alpha=0.5)
+    plt.bar(bar_pos[i-1]+0.25, np.mean(feature_matrix_mean[:, 1]), color=color_fast, label="Fast", width=0.5, alpha=0.5)
+
+    # Plot the individual points
+    for dat in feature_matrix_mean:
+        plt.plot(bar_pos[i-1]-0.25, dat[0], marker='o', markersize=3, color=color_slow)
+        plt.plot(bar_pos[i-1] + 0.25, dat[1], marker='o', markersize=3, color=color_fast)
+        # Add line connecting the points
+        plt.plot([bar_pos[i-1]-0.25, bar_pos[i-1]+0.25], dat, color="black", linewidth=0.5, alpha=0.5)
+
+    # Add statistics
+    z, p = scipy.stats.wilcoxon(x=feature_matrix_mean[:, 0], y=feature_matrix_mean[:, 1])
+    sig = "bold" if p < 0.05 else "regular"
+    plt.text(bar_pos[i-1]-0.5, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig)
 
 # Adjust plot
-plt.xlim([0, n_trials-1])
+plt.xticks(bar_pos, ["First half \n stimulation","Second half \n stimulation", "First half \n recovery", "Second half \n stimulation"], fontsize=14)
+feature_name_space = feature_name.replace("_", " ")
+plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
 plt.subplots_adjust(bottom=0.2, left=0.15)
 utils.adjust_plot(fig)
-plt.legend()
+axes = plt.gca()
+axes.spines[['right', 'top']].set_visible(False)
 
 # Save figure on group basis
-plt.savefig(f"../../Plots/{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/stats_{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
 
 plt.show()
