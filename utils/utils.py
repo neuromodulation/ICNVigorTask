@@ -25,6 +25,19 @@ def norm_perc(array):
     return array_norm_perc
 
 
+def norm_perc_every_t_trials(array, t):
+    """Normalize feature to mean of 5 values every t values and return as percentage"""
+    n_blocks = int(np. floor(array.shape[2] / t))
+    array_norm_perc = array.copy()
+    for i in range(n_blocks):
+        mean_start = np.nanmean(array[..., :, t*i:t*i+5], axis=-1)[..., np.newaxis]
+        if i < n_blocks-1:
+            array_norm_perc[:, :, t*i:t*(i+1)]= ((array[:, :, t*i:t*(i+1)] - mean_start) / mean_start) * 100
+        else:
+            array_norm_perc[:, :, t * i:] = ((array[:, :, t * i:] - mean_start) / mean_start) * 100
+    return array_norm_perc
+
+
 def reshape_data_trials(raw_data):
     """Gives back the data in a array format reshaped in trials
     shape (2x2x96xn_chansx50000)(Conditions, Blocks, Trials, Channels, Time samples)

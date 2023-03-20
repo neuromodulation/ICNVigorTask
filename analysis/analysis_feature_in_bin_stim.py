@@ -24,12 +24,12 @@ med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26]
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
 # Load feature matrix
-feature_matrix = np.load(f"../../Data/{feature_name}.npy")
+feature_matrix = np.load(f"../../Data/{feature_name}_new.npy")
 
 # Select datasets of interest
 feature_matrix = feature_matrix[datasets, :, :, :]

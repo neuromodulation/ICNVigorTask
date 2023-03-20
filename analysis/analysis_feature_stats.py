@@ -25,7 +25,8 @@ med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26]
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26]
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
@@ -46,7 +47,8 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
-feature_matrix = utils.norm_perc(feature_matrix)
+#feature_matrix = utils.norm_perc(feature_matrix)
+feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 45)
 
 # Compute significance for first/last half of stimulation/recovery
 fig = plt.figure()
@@ -83,7 +85,7 @@ plt.xticks(bar_pos, ["First half \n stimulation","Second half \n stimulation", "
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
 plt.subplots_adjust(bottom=0.2, left=0.15)
-plt.legend(loc="upper left")
+plt.legend(loc="best")
 utils.adjust_plot(fig)
 axes = plt.gca()
 axes.spines[['right', 'top']].set_visible(False)

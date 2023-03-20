@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "peak_acc" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "slow" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 # Loop over all files in folder
@@ -97,6 +97,34 @@ for filename in os.listdir(matlab_files_root):
                     feature[cond, block_type, i_trial - 1] = np.mean(data_mask[onset_idx:offset_idx, 3])
                 except:
                     feature[cond, block_type, i_trial - 1] = None
+            elif feature_name == "mean_acc":
+                # Get index of peak speed
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                # Get idx of movement onset and offset (closest sample to peak below threshold)
+                move_thres = 300
+                try:
+                    onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
+                        np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                    offset_idx = np.where(data_mask[:, 3] < move_thres)[0][
+                        np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
+                    feature[cond, block_type, i_trial - 1] = np.mean(np.diff(data_mask[onset_idx:offset_idx, 3]))
+                except:
+                    feature[cond, block_type, i_trial - 1] = None
+            # Get index of all slow movements (peak speed slower than the last two movements)
+            elif feature_name == "fast" and i_trial > 3:
+                # Get peak speed from current trials and two previous trials
+                peak_speed = np.max(data[mask, 3])
+                peak_speed_prev_1 = np.max(data[np.where(np.logical_and(data[:, 7] == i_block, data[:, 8] == i_trial - 1)), 3])
+                peak_speed_prev_2 = np.max(data[np.where(np.logical_and(data[:, 7] == i_block, data[:, 8] == i_trial - 2)), 3])
+                if peak_speed > peak_speed_prev_1 and peak_speed > peak_speed_prev_2:
+                    feature[cond, block_type, i_trial - 1] = 1
+            elif feature_name == "slow" and i_trial > 3:
+                # Get peak speed from current trials and two previous trials
+                peak_speed = np.max(data[mask, 3])
+                peak_speed_prev_1 = np.max(data[np.where(np.logical_and(data[:, 7] == i_block, data[:, 8] == i_trial - 1)), 3])
+                peak_speed_prev_2 = np.max(data[np.where(np.logical_and(data[:, 7] == i_block, data[:, 8] == i_trial - 2)), 3])
+                if peak_speed < peak_speed_prev_1 and peak_speed < peak_speed_prev_2:
+                    feature[cond, block_type, i_trial - 1] = 1
 
     # Save the feature values for all datasest
     feature_all.append(feature)
@@ -104,7 +132,7 @@ for filename in os.listdir(matlab_files_root):
     # Plot if needed
     if plot_individual:
         # Detect and fill outliers (e.g. when subject did not touch the screen)
-        np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=2, arr=feature)
+        np.apply_along_axis(lambda m: utils.fill_outliers_mean(m), axis=2, arr=feature)
 
         # Normalize to the start and smooth over 5 consecutive movements
         feature = utils.smooth_moving_average(utils.norm_perc(feature), window_size=5)
