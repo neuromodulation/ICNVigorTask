@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc"  # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "motor_range" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
@@ -47,27 +47,29 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
-#feature_matrix = utils.norm_perc(feature_matrix)
-feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
+feature_matrix = utils.norm_perc(feature_matrix)
+#eature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 15)
 
 # Smooth over 5 consecutive movements for plotting
 feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)
+
+#feature_matrix = np.cumsum(np.diff(feature_matrix, axis=2), axis=2)
 
 # Plot individual if needed
 if plot_individual:
     for i in range(n_datasets):
         # Plot feature over time
-        plt.figure()
+        plt.figure(figsize=(10, 3))
         utils.plot_conds(feature_matrix[i,:,:])
         plt.xlabel("Movement number", fontsize=14)
         feature_name_space = feature_name.replace("_", " ")
         plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
         # Save figure on individual basis
         plt.savefig(f"../../Plots/dataset_{i}_{feature_name}_{med}.png", format="png", bbox_inches="tight")
-        plt.close()
+        #plt.close()
 
 # Average over all datasets
-feature_matrix_mean = np.nanmean(feature_matrix, axis=0)
+feature_matrix_mean = np.nanmedian(feature_matrix, axis=0)
 feature_matrix_std = np.nanstd(feature_matrix, axis=0)
 
 # Plot feature over time
