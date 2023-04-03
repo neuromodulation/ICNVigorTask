@@ -19,14 +19,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "move_offset_time" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "motor_range" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26]
-    #datasets = [6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26]
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
@@ -47,8 +47,8 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
-#feature_matrix = utils.norm_perc(feature_matrix)
-feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 45)
+feature_matrix = utils.norm_perc(feature_matrix)
+#feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 45)
 
 #feature_matrix = np.nancumsum(np.diff(feature_matrix, axis=2), axis=2)
 

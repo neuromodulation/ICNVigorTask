@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "move_offset_time" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "stim_time" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 # Loop over all files in folder
@@ -75,7 +75,7 @@ for filename in os.listdir(matlab_files_root):
                 # Get index of peak speed
                 idx_peak_speed = np.argmax(data_mask[:, 3])
                 # Get idx of movement onset (closest sample to peak below threshold)
-                move_thres = 500
+                move_thres = 300
                 onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
                     np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
                 feature[cond, block_type, i_trial - 1] = data_mask[onset_idx, 2] - data_mask[0, 2]
@@ -155,7 +155,7 @@ for filename in os.listdir(matlab_files_root):
                 # Get index of peak speed
                 idx_peak_speed = np.argmax(data_mask[:, 3])
                 # Get idx of movement onset (closest sample to peak below threshold)
-                move_thres = 500
+                move_thres = 300
                 try:
                     onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
                         np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
