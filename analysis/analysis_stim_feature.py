@@ -21,9 +21,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "mean_speed"
+feature_name = "peak_speed"
 plot_individual = False
-med = "all"  # "on", "off", "all"
+med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
@@ -59,33 +59,32 @@ stim = stim[:, :, 5:]
 #feature_matrix = utils.norm_perc(feature_matrix)
 
 # Compute mean/median feature over all trials, only slow and only fast stimulated
-feature_all = np.zeros((n_datasets, 3))
+feature_all = np.zeros((3, n_datasets))
 
 # All
-feature_all[:, 2] = np.nanmedian(feature_matrix, axis=[1, 2])
+feature_all[2, :] = np.nanmedian(feature_matrix, axis=[1, 2])
 
 # Loop over conditions slow/fast
 for cond in range(2):
     for dataset in range(n_datasets):
-       feature_all[dataset, cond] = np.nanmedian(feature_matrix[dataset, cond, :][stim[dataset, cond, :] == 1])
+       feature_all[cond, dataset] = np.nanmedian(feature_matrix[dataset, cond, :][stim[dataset, cond, :] == 1])
 
 # Plot as boxplots
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All" : "grey"}
 fig = plt.figure()
 x = np.repeat(["Slow", "Fast", "All"], n_datasets)
-box = sb.boxplot(x=x, y=feature_all.T.flatten(), showfliers=False, palette=my_pal)
-sb.stripplot(x=x, y=feature_all.T.flatten(), palette=my_pal)
+box = sb.boxplot(x=x, y=feature_all.flatten(), showfliers=False, palette=my_pal)
+sb.stripplot(x=x, y=feature_all.flatten(), palette=my_pal)
 
 # Add statistics
-add_stat_annotation(box, x=x, y=feature_all.T.flatten(),
+add_stat_annotation(box, x=x, y=feature_all.flatten(),
                     box_pairs=[("Slow", "Fast"), ("Slow", "All"), ("Fast", "All")],
                     test='Wilcoxon', text_format='star', loc='inside', verbose=2)
 # Add labels
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"{feature_name_space}", fontsize=14)
+plt.xticks(fontsize=14)
 
-# Save figure
+# Save the figure
 plt.show()
 plt.savefig(f"../../Plots/task_{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
-
-plt.show()

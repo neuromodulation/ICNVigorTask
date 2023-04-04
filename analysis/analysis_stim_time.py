@@ -1,4 +1,4 @@
-# Analysis of tiem of stimulation
+# Analysis of time of stimulation
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,8 +20,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-plot_individual = False
-datasets = np.arange(26)#[0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20]
+med = "off"  # "on", "off", "all"
+if med == "all":
+    datasets = np.arange(26)
+elif med == "off":
+    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+else:
+    datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
+n_datasets = len(datasets)
 
 # Load time of onset, offset and peak, stim
 move_onset_time = np.load(f"../../Data/move_onset_time.npy")
@@ -33,67 +39,41 @@ peak_speed_time = peak_speed_time[datasets, :, :, :]
 stim_time = np.load(f"../../Data/stim_time.npy")
 stim_time = stim_time[datasets, :, :, :]
 
+# Plot histogram of movement durations
+move_dur = move_offset_time - move_onset_time
+plt.figure()
+plt.subplot(1, 2, 1)
+sb.boxplot(move_dur.flatten(), showfliers=False, color="grey")
+plt.xticks([])
+plt.ylabel("Movement duration [second]", fontsize=12)
+
 # Compute relative time of stim in movement
 rel_stim_time = (stim_time - move_onset_time) / (move_offset_time - move_onset_time)
-# Set outliers to None
-rel_stim_time[rel_stim_time < 0] = None
-rel_stim_time[rel_stim_time > 1] = None
+
+# Loop over conditions slow/fast
+rel_stim_time_mean = np.zeros((2, n_datasets))
+for cond in range(2):
+    for dataset in range(n_datasets):
+       rel_stim_time_mean[cond, dataset] = np.nanmedian(rel_stim_time[dataset, cond, :, :])
+
+#rel_stim_time = np.vstack((rel_stim_time[:, 0, :, :].flatten(), rel_stim_time[:, 1, :, :].flatten()))
 # Transform into %
 rel_stim_time *= 100
+plt.subplot(1, 2, 2)
+x = np.repeat(["Slow", "Fast"], n_datasets)
+my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
+box = sb.boxplot(x=x, y=rel_stim_time_mean.flatten(), showfliers=False, palette=my_pal)
+sb.stripplot(x=x, y=rel_stim_time_mean.flatten(), palette=my_pal)
+plt.ylabel("Time of stimulation [% of movement]", fontsize=12)
 
-# Plot relative stim for inspection divided by stimulation condition
-plt.figure()
-plt.hist(rel_stim_time[:, 0, :, :].ravel(), bins=20, label="Slow")
-plt.hist(rel_stim_time[:, 1, :, :].ravel(), bins=20, label="Fast")
-# Compute significance
-t, p = stats.ttest_rel(rel_stim_time[:, 0, :, :].ravel(), rel_stim_time[:, 1, :, :].ravel(), nan_policy="omit")
-plt.legend()
-plt.xlabel("Relative time of stimulation during movement in %", fontsize=12)
-plt.title(f"Paired t-test p={np.round(p, 4)}", fontsize=14)
+# Add stats
+add_stat_annotation(box, x=x, y=rel_stim_time_mean.flatten(),
+                    box_pairs=[("Slow", "Fast")],
+                    test='Wilcoxon', text_format='star', loc='inside', verbose=2)
 
-# Save figure
-plt.savefig(f"../../Plots/stim_time_conditions.png", format="png", bbox_inches="tight")
+plt.subplots_adjust(wspace=0.5)
+plt.show()
 
-# Load peak speed matrix
-peak_speed = np.load(f"../../Data/peak_speed.npy")
-peak_speed = peak_speed[datasets, :, :, :]
-
-# Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers(m), axis=3, arr=peak_speed)
-
-# Normalize to the start of each stimulation block
-peak_speed = utils.norm_perc(peak_speed)
-
-# Compute correlation between relative time of stim and peak speed of next movement
-cond_names = ["Slow", "Fast"]
-plt.figure(figsize=(15, 5))
-for cond in range(2):
-    plt.subplot(1, 2, cond+1)
-    rel_stim_time_cond = rel_stim_time[:, cond, :, :]
-    peak_speed_cond = peak_speed[:, cond, :, :]
-    # Get the stim time without nan
-    idx_stim = np.where(~np.isnan(rel_stim_time_cond))
-    # Get the peak of the subsequent movement
-    idx_stim = list(idx_stim)
-    idx_stim[2] = idx_stim[2] + 1
-    # Filter out indices than are larger than the array
-    delete_idx = np.where(idx_stim[2] > 95)
-    idx_stim = [np.delete(tmp, delete_idx) for tmp in idx_stim]
-    # Index
-    peak_speed_cond = peak_speed_cond[tuple(idx_stim)]
-    # Substract one to get stim time of previous movement
-    idx_stim[2] = idx_stim[2] - 1
-    rel_stim_time_cond = rel_stim_time_cond[tuple(idx_stim)]
-    # Correlate
-    corr, p = spearmanr(rel_stim_time_cond.ravel(), peak_speed_cond.ravel())
-    sb.regplot(x=rel_stim_time_cond.ravel(), y=peak_speed_cond.ravel())
-    plt.title(f"{cond_names[cond]} stim, corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
-    plt.ylabel(f"$\Delta$ peak speed of subsequent move in %", fontsize=14)
-    plt.xlabel(f"Relative time of stimulation during movement in %", fontsize=14)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.subplots_adjust(bottom=0.15, hspace=0.2)
-
-plt.savefig(f"../../Plots/corr_stim_next_speed.png", format="png", bbox_inches="tight")
+plt.savefig(f"../../Plots/Stim_time_{med}.png", format="png", bbox_inches="tight")
 
 plt.show()
