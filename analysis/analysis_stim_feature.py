@@ -23,7 +23,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed"
 plot_individual = False
-med = "off"  # "on", "off", "all"
+med = "all"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
@@ -86,5 +86,5 @@ plt.ylabel(f"{feature_name_space}", fontsize=14)
 plt.xticks(fontsize=14)
 
 # Save the figure
-plt.show()
 plt.savefig(f"../../Plots/task_{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
+plt.show()
