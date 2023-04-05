@@ -39,9 +39,10 @@ feature_matrix = feature_matrix[:, :, 5:]
 # Normalize to average of first 5 movements
 if normalize:
     feature_matrix = utils.norm_perc(feature_matrix)
+    #feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Plot median speed for each medication
-median_feature_all = np.median(feature_matrix, axis=(1, 2))#np.nanmedian(feature_matrix, axis=[1, 2])
+median_feature_all = np.nanmedian(feature_matrix, axis=(1, 2))
 median_feature_off = median_feature_all[datasets_off]
 median_feature_on = median_feature_all[datasets_on]
 median_feature_long = np.concatenate((median_feature_off, median_feature_on))
@@ -75,6 +76,23 @@ corr, p = spearmanr(UPDRS, median_feature_all)
 plt.figure()
 sb.regplot(x=UPDRS, y=median_feature_all)
 plt.title(f"corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
+# Add labels
+feature_name_space = feature_name.replace("_", " ")
+if normalize:
+    plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
+else:
+    plt.ylabel(f"{feature_name_space}", fontsize=14)
+plt.xlabel(f"UPDRS", fontsize=14)
+
+# Correlate only off/on
+UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None, None, None])
+UPDRS_off = UPDRS[datasets_off]
+median_feature_off = median_feature_off[UPDRS_off != None]
+UPDRS_off = UPDRS_off[UPDRS_off != None].astype(np.int32)
+corr, p = spearmanr(UPDRS_off, median_feature_off)
+plt.figure()
+sb.regplot(x=UPDRS_off, y=median_feature_off)
+plt.title(f"Off corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
 # Add labels
 feature_name_space = feature_name.replace("_", " ")
 if normalize:
