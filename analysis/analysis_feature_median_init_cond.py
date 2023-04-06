@@ -39,6 +39,7 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials))
 
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
+feature_matrix_non_norm = feature_matrix.copy()
 
 # Get median speed at beginning of task
 median_feature_start = np.nanmedian(feature_matrix[:, :, :5], axis=(1, 2))
@@ -48,12 +49,16 @@ if normalize:
    feature_matrix = utils.norm_perc(feature_matrix)
    #feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
-# Plot median speed for each medication and condition
-off_fast_start = np.nanmedian(feature_matrix[datasets_off, 1, :45], axis=1) - np.nanmedian(feature_matrix[datasets_off, 0, :45], axis=1)
-off_fast_end = np.nanmedian(feature_matrix[datasets_off, 1, -45:], axis=1) - np.nanmedian(feature_matrix[datasets_off, 0, -45:], axis=1)
+# Plot correlation between initial speed and difference in condition speeds
+#datasets_off = datasets_all
+#feature_matrix_non_norm = feature_matrix
+off_fast_start = np.nanmedian(feature_matrix[datasets_off, 1, :], axis=1) - np.nanmedian(feature_matrix[datasets_off, 0, :], axis=1)
 x = off_fast_start
-y = off_fast_end
 y = median_feature_start[datasets_off]
+y = np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 90, axis=(1,2)) \
+    - np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 10, axis=(1,2))
+y2 = np.percentile(feature_matrix_non_norm[datasets_off, :, -45:], 90, axis=(1,2)) \
+    - np.percentile(feature_matrix_non_norm[datasets_off, :, -45:], 10, axis=(1,2))
 corr, p = spearmanr(x, y)
 plt.figure()
 sb.regplot(x=x, y=y)
@@ -62,13 +67,21 @@ plt.title(f"Off corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='b
 feature_name_space = feature_name.replace("_", " ")
 if normalize:
     plt.xlabel(f"Difference Fast-Slow of change in {feature_name_space} \n in first half of block[%]", fontsize=12)
-    plt.ylabel(f"Difference Fast-Slow of change in {feature_name_space} \n in last half of block[%]", fontsize=12)
 else:
     plt.xlabel(f"Difference Fast-Slow in {feature_name_space} \n in first half of block[%]", fontsize=12)
-    plt.ylabel(f"Difference Fast-Slow in {feature_name_space} \n in last half of block[%]", fontsize=12)
+plt.ylabel(f"Initial {feature_name_space}", fontsize=12)
 
 # Save figure
 plt.subplots_adjust(bottom=0.2, left=0.2)
-plt.savefig(f"../../Plots/corr_diff_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/corr_diff_init_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
 plt.show()
+
+plt.figure()
+y = np.percentile(feature_matrix_non_norm[datasets_off, 1, :45], 90, axis=(1)) \
+    - np.percentile(feature_matrix_non_norm[datasets_off, 1, :45], 10, axis=(1))
+y2 = np.percentile(feature_matrix_non_norm[datasets_off, 1, -45:], 90, axis=(1)) \
+    - np.percentile(feature_matrix_non_norm[datasets_off, 1, -45:], 10, axis=(1))
+x = np.repeat(["First", "Last"], len(datasets_off))
+box = sb.boxplot(x=x, y=np.concatenate((y, y2)), showfliers=False)
+sb.stripplot(x=x, y=np.concatenate((y, y2)))
