@@ -31,10 +31,10 @@ feature_matrix = np.load(f"../../Data/{feature_name}.npy")
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Choose only the stimulation period
-feature_matrix = feature_matrix[:, :, 0, :]
+feature_matrix = feature_matrix[:, :, 0, -45:]
 
 # Reshape matrix such that blocks from one condition are concatenated
-feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials))
+feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, 45))
 
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
