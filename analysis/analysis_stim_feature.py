@@ -70,10 +70,11 @@ for cond in range(2):
        feature_all[cond, dataset] = np.nanmedian(feature_matrix[dataset, cond, :][stim[dataset, cond, :] == 1])
 
 # Plot as boxplots
-my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All" : "grey"}
+my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
+my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
 fig = plt.figure()
 x = np.repeat(["Slow", "Fast", "All"], n_datasets)
-box = sb.boxplot(x=x, y=feature_all.flatten(), showfliers=False, palette=my_pal)
+box = sb.boxplot(x=x, y=feature_all.flatten(), showfliers=False, palette=my_pal_trans)
 sb.stripplot(x=x, y=feature_all.flatten(), palette=my_pal)
 
 # Add statistics

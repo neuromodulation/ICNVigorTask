@@ -22,8 +22,8 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
-normalize = True
-datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
+normalize = False
+datasets_on = [3, 4, 5, 7, 9, 10, 18, 21, 22, 23, 24, 25]
 datasets_all = np.arange(28)
 
 # Load feature matrix
@@ -49,8 +49,9 @@ median_feature_long = np.concatenate((median_feature_off, median_feature_on))
 
 # Visualize
 x = np.concatenate((np.repeat("Off", len(datasets_off)), np.repeat("On", len(datasets_on))))
-my_pal = {"Off": "red", "On": "green", "All": "grey"}
-box = sb.boxplot(x=x, y=median_feature_long, showfliers=False, palette=my_pal)
+my_pal = {"Off": "darkred", "On": "green", "All": "grey"}
+my_pal_trans = {"Off": "lightcoral", "On": "lightgreen", "All": "lightgrey"}
+box = sb.boxplot(x=x, y=median_feature_long, showfliers=False, palette=my_pal_trans)
 sb.stripplot(x=x, y=median_feature_long, palette=my_pal)
 
 # Add statistics

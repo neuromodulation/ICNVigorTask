@@ -60,7 +60,8 @@ for cond in range(2):
 plt.subplot(1, 3, 2)
 x = np.repeat(["Slow", "Fast"], n_datasets)
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
-box = sb.boxplot(x=x, y=rel_stim_time_mean.flatten(), showfliers=False, palette=my_pal)
+my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+box = sb.boxplot(x=x, y=rel_stim_time_mean.flatten(), showfliers=False, palette=my_pal_trans)
 sb.stripplot(x=x, y=rel_stim_time_mean.flatten(), palette=my_pal)
 plt.ylabel("Time of stimulation [% of movement]", fontsize=12)
 
@@ -81,8 +82,7 @@ for cond in range(2):
 # Plot
 plt.subplot(1, 3, 3)
 x = np.repeat(["Slow", "Fast"], n_datasets)
-my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
-box = sb.boxplot(x=x, y=stim_perc_mean.flatten(), showfliers=False, palette=my_pal)
+box = sb.boxplot(x=x, y=stim_perc_mean.flatten(), showfliers=False, palette=my_pal_trans)
 sb.stripplot(x=x, y=stim_perc_mean.flatten(), palette=my_pal)
 plt.ylabel("% of stimulation (0.3 sec) during movement", fontsize=12)
 
