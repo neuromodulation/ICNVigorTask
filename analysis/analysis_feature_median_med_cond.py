@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
-normalize = False
+normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 datasets_all = np.arange(28)
 
@@ -77,7 +77,7 @@ plt.savefig(f"../../Plots/median_cond_{feature_name}_normalize_{normalize}.svg",
 
 # Correlate median difference in feature between Slow/Fast with UPDRS scores
 median_feature_off = np.diff(median_feature_all[datasets_off, :], axis=1)
-UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None, None, None])
+UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None, None, 37])
 UPDRS_off = UPDRS[datasets_off]
 median_feature_off = median_feature_off[UPDRS_off != None]
 UPDRS_off = UPDRS_off[UPDRS_off != None].astype(np.int32)
