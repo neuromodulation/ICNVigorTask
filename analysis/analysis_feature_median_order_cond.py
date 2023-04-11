@@ -53,53 +53,29 @@ if normalize:
 # Compute the effect in the first half of the stimulation period (difference fast-slow)
 median_effect = np.nanmedian(feature_matrix[datasets_off, 1, :45], axis=1) - np.nanmedian(
     feature_matrix[datasets_off, 0, :45], axis=1)
-median_effect[np.where(slow_first[datasets_off]]
+idx_slow_fast = np.array(np.where(slow_first[datasets_off] == 1)).flatten()
+idx_fast_slow = np.array(np.where(slow_first[datasets_off] == 0)).flatten()
+y = np.concatenate((median_effect[idx_slow_fast], median_effect[idx_fast_slow]))
 # Compare the difference between Slow/Fast and Fast/Slow
 
 # Visualize
 plt.figure()
-x = np.concatenate((np.repeat("Off", len(datasets_off)*2), np.repeat("On", len(datasets_on)*2)))
-hue = np.array([["Slow", "Fast"] for i in range(len(datasets_off) + len(datasets_on))]).flatten()
-my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
-my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "grey"}
-box = sb.boxplot(x=x, y=median_feature, hue=hue, showfliers=False, palette=my_pal_trans)
-sb.stripplot(x=x, y=median_feature, dodge=True, ax=box, hue=hue, palette=my_pal)
+my_pal = {"Fast/Slow": "green", "Slow/Fast": "grey"}
+my_pal_trans = {"Fast/Slow": "lightgreen",  "Slow/Fast": "lightgrey"}
+x = np.concatenate((np.repeat("Slow/Fast", len(idx_slow_fast)), np.repeat("Fast/Slow", len(idx_fast_slow))))
+box = sb.boxplot(x=x, y=y, showfliers=False, palette=my_pal_trans)
+sb.stripplot(x=x, y=y, dodge=True, ax=box, palette=my_pal)
 
 # Add statistics
-add_stat_annotation(box, x=x, y=median_feature, hue=hue,
-                    box_pairs=[(("Off", "Slow"), ("Off", "Fast")),
-                               (("On", "Slow"), ("On", "Fast"))],
-                    test='Wilcoxon', text_format='simple', loc='inside', verbose=2)
+"""add_stat_annotation(box, x=x, y=y,
+                    box_pairs=[("Slow/Fast", "Fast/Slow")],
+                    test='Wilcoxon', text_format='simple', loc='inside', verbose=2)"""
 # Add labels
 feature_name_space = feature_name.replace("_", " ")
-if normalize:
-    plt.ylabel(f"Median change in {feature_name_space} [%]", fontsize=14)
-else:
-    plt.ylabel(f"{feature_name_space}", fontsize=14)
+plt.ylabel(f"Difference Fast-Slow of change in {feature_name_space} [%]", fontsize=12)
 plt.xticks(fontsize=14)
 
 # Save figure
-plt.savefig(f"../../Plots/median_cond_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
-
-# Correlate median difference in feature between Slow/Fast with UPDRS scores
-median_feature_off = np.diff(median_feature_all[datasets_off, :], axis=1)
-UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None, None, 37])
-UPDRS_off = UPDRS[datasets_off]
-median_feature_off = median_feature_off[UPDRS_off != None]
-UPDRS_off = UPDRS_off[UPDRS_off != None].astype(np.int32)
-corr, p = spearmanr(UPDRS_off, median_feature_off)
-plt.figure()
-sb.regplot(x=UPDRS_off, y=median_feature_off)
-plt.title(f"Off corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
-# Add labels
-feature_name_space = feature_name.replace("_", " ")
-if normalize:
-    plt.ylabel(f"Difference Slow/Fast of change in {feature_name_space} [%]", fontsize=12)
-else:
-    plt.ylabel(f"{feature_name_space}", fontsize=14)
-plt.xlabel(f"UPDRS", fontsize=14)
-
-# Save figure
-plt.savefig(f"../../Plots/corr_UPDRS_median_diff_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/order_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
 plt.show()
