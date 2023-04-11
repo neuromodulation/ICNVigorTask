@@ -21,7 +21,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "mean_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
 plotting = False
@@ -38,44 +38,49 @@ feature_matrix = feature_matrix[:, :, 0, :]
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials))
 
+# Detect and fill outliers (e.g. when subject did not touch the screen)
+np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
+
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
 if normalize:
    feature_matrix = utils.norm_perc(feature_matrix)
-   #feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Define fitting function
 def func(x, a, b):
-    return 1+a*x**b
+    return 1 + a * x**b
 
-
+# Fit data to function
 xdata = np.arange(n_trials-5)
 a = np.zeros((len(datasets_off), 2))
-for dataset in datasets_off:
-    plt.figure()
+conds = ["Slow", "Fast"]
+colors = ["#00863b", "#3b0086"]
+for i, dataset in enumerate(datasets_off):
+    fig, ax = plt.subplots()
     for cond in range(2):
         ydata = feature_matrix[dataset, cond, :]
         try:
-            popt, pcov = curve_fit(func, xdata, ydata)
-            plt.plot(xdata, func(xdata, *popt), 'r-',
-                 label='fit: a=%5.3f, b=%5.3f' % tuple(popt))
-            a[dataset, cond] = popt[0]
+            popt, pcov = curve_fit(func, xdata, ydata, maxfev=10000)
+            ax.plot(xdata, func(xdata, *popt),
+                 label=f'fit: {conds[cond]} a={np.round(popt[0], 3)}, b={np.round(popt[1], 3)}',
+                    color=colors[cond])
+            a[i, cond] = popt[0]
         except:
             print("not found")
-        plt.plot(xdata, ydata, label=f'data {cond}')
+        ax.plot(xdata, ydata, color=colors[cond])
         plt.legend()
         if not plotting:
             plt.close()
 
-x = np.repeat(["Slow", "Fast"], len(datasets_off))
+# Plot as boxplot
 plt.figure()
-box = sb.boxplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])), showfliers=False)
-sb.stripplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])))
-z, p = scipy.stats.wilcoxon(x=a[:, 0], y=a[:, 1])
-plt.title(f"p = {p}")
-# Different result
+my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
+my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+x = np.repeat(["Slow", "Fast"], len(datasets_off))
+box = sb.boxplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])), showfliers=False, palette=my_pal_trans)
+sb.stripplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])), palette=my_pal)
 # Add statistics
 add_stat_annotation(box, x=x, y=np.concatenate((a[:, 0], a[:, 1])),
                     box_pairs=[("Slow", "Fast")],
@@ -83,6 +88,7 @@ add_stat_annotation(box, x=x, y=np.concatenate((a[:, 0], a[:, 1])),
 
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"Fit parameter a of {feature_name_space}", fontsize=12)
+
 # Save figure
 plt.savefig(f"../../Plots/curve_fit_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
