@@ -42,7 +42,6 @@ feature_matrix = feature_matrix[:, :, 5:]
 # Normalize to average of first 5 movements
 if normalize:
    feature_matrix = utils.norm_perc(feature_matrix)
-   #feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Plot median speed for each medication and condition
 median_feature_all = np.nanmedian(feature_matrix, axis=2)
@@ -94,6 +93,6 @@ else:
 plt.xlabel(f"UPDRS", fontsize=14)
 
 # Save figure
-plt.savefig(f"../../Plots/median_diff_corr_UPDRS_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/corr_UPDRS_median_diff_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
 plt.show()

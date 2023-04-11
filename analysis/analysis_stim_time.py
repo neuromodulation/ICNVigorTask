@@ -20,78 +20,65 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-med = "all"  # "on", "off", "all"
-if med == "all":
-    datasets = np.arange(26)
-elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
-else:
-    datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
-n_datasets = len(datasets)
+datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
+datasets = [datasets_off, datasets_on]
 
-# Load time of onset, offset and peak, stim
-move_onset_time = np.load(f"../../Data/move_onset_time.npy")
-move_onset_time = move_onset_time[datasets, :, :, :]
-move_offset_time = np.load(f"../../Data/move_offset_time.npy")
-move_offset_time = move_offset_time[datasets, :, :, :]
-peak_speed_time = np.load(f"../../Data/peak_speed_time.npy")
-peak_speed_time = peak_speed_time[datasets, :, :, :]
-stim_time = np.load(f"../../Data/stim_time.npy")
-stim_time = stim_time[datasets, :, :, :]
+# Loop over the medication condition
 
-# Plot histogram of movement durations
-move_dur = move_offset_time - move_onset_time
-plt.figure(figsize=(10, 5))
-plt.subplot(1, 3, 1)
-sb.boxplot(move_dur.flatten(), showfliers=False, color="grey")
-plt.xticks([])
-plt.ylabel("Movement duration [second]", fontsize=12)
+rel_stim_time_all_med = []
+diff_stim_stop_all_med = []
+for dataset in datasets:
 
-# Compute relative time of stim in movement
-rel_stim_time = (stim_time - move_onset_time) / (move_offset_time - move_onset_time)
+    # Load time of onset, offset and peak, stim
+    move_onset_time = np.load(f"../../Data/move_onset_time.npy")
+    move_onset_time = move_onset_time[dataset, :, :, :]
+    move_offset_time = np.load(f"../../Data/move_offset_time.npy")
+    move_offset_time = move_offset_time[dataset, :, :, :]
+    peak_speed_time = np.load(f"../../Data/peak_speed_time.npy")
+    peak_speed_time = peak_speed_time[dataset, :, :, :]
+    stim_time = np.load(f"../../Data/stim_time.npy")
+    stim_time = stim_time[dataset, :, :, :]
 
-# Loop over conditions slow/fast
-rel_stim_time_mean = np.zeros((2, n_datasets))
-for cond in range(2):
-    for dataset in range(n_datasets):
-       rel_stim_time_mean[cond, dataset] = np.nanmedian(rel_stim_time[dataset, cond, :, :]) * 100
+    # Compute and save relative time of stim in movement
+    rel_stim_time = (stim_time - move_onset_time) / (move_offset_time - move_onset_time)
+    rel_stim_time_median = np.nanmedian(rel_stim_time, axis=(2, 3)) * 100
+    rel_stim_time_all_med.extend(rel_stim_time_median.flatten())
+
+    # Compute distance of movement offset to stimulation offset
+    diff_stim_stop = move_offset_time - (stim_time + 0.3)
+    diff_stim_stop_median = np.nanmedian(diff_stim_stop, axis=(2, 3))
+    diff_stim_stop_all_med.extend(diff_stim_stop_median.flatten())
 
 # Plot
-plt.subplot(1, 3, 2)
-x = np.repeat(["Slow", "Fast"], n_datasets)
-my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
-my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
-box = sb.boxplot(x=x, y=rel_stim_time_mean.flatten(), showfliers=False, palette=my_pal_trans)
-sb.stripplot(x=x, y=rel_stim_time_mean.flatten(), palette=my_pal)
-plt.ylabel("Time of stimulation [% of movement]", fontsize=12)
+plt.figure(figsize=(8, 4))
 
-# Add stats
-add_stat_annotation(box, x=x, y=rel_stim_time_mean.flatten(),
-                    box_pairs=[("Slow", "Fast")],
-                    test='Wilcoxon', text_format='star', loc='inside', verbose=2)
+# Plot the relative stimulation time and difference between stim and move offset
+features = [rel_stim_time_all_med, diff_stim_stop_all_med]
+labels = ["Time of stimulation [% of movement]", "Difference move end-stim end [seconds]"]
+for i, feature in enumerate(features):
+    plt.subplot(1, 2, i+1)
+    x = np.concatenate((np.repeat("Off", len(datasets_off)*2), np.repeat("On", len(datasets_on)*2)))
+    hue = np.array([["Slow", "Fast"] for j in range(len(datasets_off) + len(datasets_on))]).flatten()
+    y = np.array(feature)
+    my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
+    my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+    box = sb.boxplot(x=x, y=y, hue=hue, showfliers=False, palette=my_pal_trans)
+    sb.stripplot(x=x, y=y, hue=hue, palette=my_pal, legend=None, dodge=True, ax=box)
+    plt.ylabel(labels[i], fontsize=12)
 
-# Compute % of stim during movement
-stim_perc = (move_offset_time - stim_time) / 0.3
+    # Add statistics
+    add_stat_annotation(box, x=x, y=y, hue=hue,
+                        box_pairs=[(("Off", "Slow"), ("Off", "Fast")),
+                                   (("On", "Slow"), ("On", "Fast")),
+                                   ],
+                        test='Wilcoxon', text_format='simple', loc='inside', verbose=2)
+plt.subplots_adjust(wspace=0.35)
 
-# Loop over conditions slow/fast
-stim_perc_mean = np.zeros((2, n_datasets))
-for cond in range(2):
-    for dataset in range(n_datasets):
-       stim_perc_mean[cond, dataset] = np.nanmedian(stim_perc[dataset, cond, :, :]) * 100
-
-# Plot
-plt.subplot(1, 3, 3)
-x = np.repeat(["Slow", "Fast"], n_datasets)
-box = sb.boxplot(x=x, y=stim_perc_mean.flatten(), showfliers=False, palette=my_pal_trans)
-sb.stripplot(x=x, y=stim_perc_mean.flatten(), palette=my_pal)
-plt.ylabel("% of stimulation (0.3 sec) during movement", fontsize=12)
-
-# Add stats
-add_stat_annotation(box, x=x, y=stim_perc_mean.flatten(),
-                    box_pairs=[("Slow", "Fast")],
-                    test='Wilcoxon', text_format='star', loc='inside', verbose=2)
-
-plt.subplots_adjust(wspace=0.5)
-
-plt.savefig(f"../../Plots/stim_time_{med}.svg", format="svg", bbox_inches="tight")
+# Save figure
+plt.savefig(f"../../Plots/stim_timing.svg", format="svg", bbox_inches="tight")
 plt.show()
+
+
+
+
