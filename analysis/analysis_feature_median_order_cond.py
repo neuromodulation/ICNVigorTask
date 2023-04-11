@@ -1,4 +1,4 @@
-# Script for plotting median features in relation with medication, UPDRS and condition
+# Script for investigating the order effect
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,15 +20,22 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
-datasets_all = np.arange(28)
+datasets_all = [datasets_off, datasets_on]
+
+# Load slow first
+slow_first = np.load(f"../../Data/slow_first.npy")
+
+# Print order percentage in on and off medication
+print(f"Off \n Slow/Fast: {np.sum(slow_first[datasets_off])}/{len(datasets_off)}")
+print(f"On \n Slow/Fast: {np.sum(slow_first[datasets_on])}/{len(datasets_on)}")
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
-n_datasets, _,_, n_trials = feature_matrix.shape
+n_datasets, _, _, n_trials = feature_matrix.shape
 
 # Choose only the stimulation period
 feature_matrix = feature_matrix[:, :, 0, :]
@@ -43,11 +50,11 @@ feature_matrix = feature_matrix[:, :, 5:]
 if normalize:
    feature_matrix = utils.norm_perc(feature_matrix)
 
-# Plot median speed for each medication and condition
-median_feature_all = np.nanmedian(feature_matrix, axis=2)
-median_feature_off = median_feature_all[datasets_off, :]
-median_feature_on = median_feature_all[datasets_on, :]
-median_feature = np.concatenate((median_feature_off.flatten(), median_feature_on.flatten()))
+# Compute the effect in the first half of the stimulation period (difference fast-slow)
+median_effect = np.nanmedian(feature_matrix[datasets_off, 1, :45], axis=1) - np.nanmedian(
+    feature_matrix[datasets_off, 0, :45], axis=1)
+median_effect[np.where(slow_first[datasets_off]]
+# Compare the difference between Slow/Fast and Fast/Slow
 
 # Visualize
 plt.figure()
