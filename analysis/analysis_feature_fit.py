@@ -35,14 +35,12 @@ n_datasets, _,_, n_trials = feature_matrix.shape
 # Choose only the stimulation period
 feature_matrix = feature_matrix[:, :, 0, :]
 
-# Reshape matrix such that blocks from one condition are concatenated
-feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials))
-
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
 
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
+n_trials = feature_matrix.shape[-1]
 
 # Normalize to average of first 5 movements
 if normalize:
@@ -53,23 +51,23 @@ def func(x, a, b):
     return 1 + a * x**b
 
 # Fit data to function
-xdata = np.arange(n_trials-5)
-a = np.zeros((len(datasets_off), 2))
+x = np.arange(n_trials)
+params = np.zeros((len(datasets_off), 2, 2))
 conds = ["Slow", "Fast"]
 colors = ["#00863b", "#3b0086"]
 for i, dataset in enumerate(datasets_off):
-    fig, ax = plt.subplots()
+    plt.figure()
     for cond in range(2):
-        ydata = feature_matrix[dataset, cond, :]
+        y = feature_matrix[dataset, cond, :]
         try:
-            popt, pcov = curve_fit(func, xdata, ydata, maxfev=10000)
-            ax.plot(xdata, func(xdata, *popt),
+            popt, pcov = curve_fit(func, x, y, maxfev=10000)
+            plt.plot(x, func(x, *popt),
                  label=f'fit: {conds[cond]} a={np.round(popt[0], 3)}, b={np.round(popt[1], 3)}',
                     color=colors[cond])
-            a[i, cond] = popt[0]
+            params[i, cond, :] = popt
         except:
             print("not found")
-        ax.plot(xdata, ydata, color=colors[cond])
+        plt.plot(x, y, color=colors[cond])
         plt.legend()
         if not plotting:
             plt.close()
@@ -79,10 +77,11 @@ plt.figure()
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
 my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
 x = np.repeat(["Slow", "Fast"], len(datasets_off))
-box = sb.boxplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])), showfliers=False, palette=my_pal_trans)
-sb.stripplot(x=x, y=np.concatenate((a[:, 0], a[:, 1])), palette=my_pal)
+y = np.concatenate((params[:, 0, 0], params[:, 1, 0]))
+box = sb.boxplot(x=x, y=y, showfliers=False, palette=my_pal_trans)
+sb.stripplot(x=x, y=y, palette=my_pal)
 # Add statistics
-add_stat_annotation(box, x=x, y=np.concatenate((a[:, 0], a[:, 1])),
+add_stat_annotation(box, x=x, y=y,
                     box_pairs=[("Slow", "Fast")],
                     test='Wilcoxon', text_format='simple', loc='inside', verbose=2)
 
@@ -92,4 +91,50 @@ plt.ylabel(f"Fit parameter a of {feature_name_space}", fontsize=12)
 # Save figure
 plt.savefig(f"../../Plots/curve_fit_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
+# Plot the fitted curves over time and save the values
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 3, 1)
+x = np.arange(n_trials)
+feature_matrix_fit = np.zeros((len(datasets_off), 2, n_trials))
+for i, dataset in enumerate(datasets_off):
+    for cond in range(2):
+        y = func(x, *params[i, cond, :])
+        plt.plot(x, y, color=colors[cond], linewidth=3)
+        # save
+        feature_matrix_fit[i, cond, :] = y
+plt.xlabel("Trial number", fontsize=14)
+plt.ylabel(f"Fit change in {feature_name_space} [%]", fontsize=14)
+
+# Compute mean and standard deviation
+feature_matrix_fit_mean = np.mean(feature_matrix_fit, axis=0)
+feature_matrix_fit_std = np.std(feature_matrix_fit, axis=0)
+
+# Plot
+plt.subplot(1, 3, 2)
+utils.plot_conds(feature_matrix_fit_mean, feature_matrix_fit_std)
+plt.xlabel("Trial number", fontsize=14)
+plt.ylabel(f"Fit change in {feature_name_space} [%]", fontsize=14)
+
+# Compute significance for each trial
+ps = np.zeros(n_trials)
+sig_thres = 0.05
+for trial in range(1, n_trials):
+    z, p = scipy.stats.wilcoxon(x=feature_matrix_fit[:, 0, trial], y=feature_matrix_fit[:, 1, trial])
+    ps[trial] = p
+    # Add p values to plot
+    if p < sig_thres:
+        plt.axvline(trial, linewidth=2, alpha=0.2, color="grey")
+plt.title(f"Stimulation block, grey if p < {sig_thres}")
+
+# Plot the p values over trials
+plt.subplot(1, 3, 3)
+plt.plot(ps, color="black", linewidth=3)
+plt.axhline(0.05, color="red", linewidth=3)
+plt.xlabel("Trial number", fontsize=14)
+plt.ylabel("p value",  fontsize=14)
+
+
+plt.subplots_adjust(wspace=0.35)
+# Save figure
+plt.savefig(f"../../Plots/fit_sig_{feature_name}.svg", format="svg", bbox_inches="tight")
 plt.show()
