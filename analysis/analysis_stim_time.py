@@ -28,6 +28,7 @@ datasets = [datasets_off, datasets_on]
 
 rel_stim_time_all_med = []
 diff_stim_stop_all_med = []
+n_stim_all_med = []
 for dataset in datasets:
 
     # Load time of onset, offset and peak, stim
@@ -50,14 +51,22 @@ for dataset in datasets:
     diff_stim_stop_median = np.nanmedian(diff_stim_stop, axis=(2, 3))
     diff_stim_stop_all_med.extend(diff_stim_stop_median.flatten())
 
+    # Compute the number of stimulated movements
+    stim = stim_time.copy()
+    stim[np.isnan(stim)] = 0
+    stim[np.nonzero(stim)] = 1
+    n_stim = np.sum(stim, axis=(2, 3))
+    n_stim_all_med.extend(n_stim.flatten())
+
 # Plot
-plt.figure(figsize=(8, 4))
+plt.figure(figsize=(12, 4))
 
 # Plot the relative stimulation time and difference between stim and move offset
-features = [rel_stim_time_all_med, diff_stim_stop_all_med]
-labels = ["Time of stimulation [% of movement]", "Difference move end-stim end [seconds]"]
+features = [rel_stim_time_all_med, diff_stim_stop_all_med, n_stim_all_med]
+labels = ["Time of stimulation [% of movement]", "Difference move end-stim end [seconds]",
+          "Number of stimulated movements"]
 for i, feature in enumerate(features):
-    plt.subplot(1, 2, i+1)
+    plt.subplot(1, 3, i+1)
     x = np.concatenate((np.repeat("Off", len(datasets_off)*2), np.repeat("On", len(datasets_on)*2)))
     hue = np.array([["Slow", "Fast"] for j in range(len(datasets_off) + len(datasets_on))]).flatten()
     y = np.array(feature)
@@ -78,6 +87,7 @@ plt.subplots_adjust(wspace=0.35)
 # Save figure
 plt.savefig(f"../../Plots/stim_timing.svg", format="svg", bbox_inches="tight")
 plt.show()
+
 
 
 

@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "peak_speed" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "move_offset_time" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 slow_first_all = []
@@ -90,7 +90,7 @@ for filename in os.listdir(matlab_files_root):
                     offset_idx = np.where(data_mask[:, 3] < move_thres)[0][np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
                     feature[cond, block_type, i_trial - 1] = data_mask[offset_idx, 2] - data_mask[0, 2]
                 except:
-                    feature[cond, block_type, i_trial - 1] = None
+                    feature[cond, block_type, i_trial - 1] = data_mask[-1, 2] - data_mask[0, 2]
             elif feature_name == "move_dur":
                 # Get index of peak speed
                 idx_peak_speed = np.argmax(data_mask[:, 3])
