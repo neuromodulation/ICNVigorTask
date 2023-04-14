@@ -19,11 +19,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_acc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
-med = "off"  # "on", "off", "all"
+med = "all"  # "on", "off", "all"
 if med == "all":
-    datasets = np.arange(26)
+    datasets = np.arange(28)
 elif med == "off":
     datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 else:
@@ -52,7 +52,6 @@ feature_matrix = utils.norm_perc(feature_matrix)
 # Smooth over 5 consecutive movements for plotting
 feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)
 
-#feature_matrix = np.cumsum(np.diff(feature_matrix, axis=2), axis=2)
 
 # Plot individual if needed
 if plot_individual:
@@ -68,7 +67,7 @@ if plot_individual:
         #plt.close()
 
 # Average over all datasets
-feature_matrix_mean = np.nanmedian(feature_matrix, axis=0)
+feature_matrix_mean = np.nanmean(feature_matrix, axis=0)
 feature_matrix_std = np.nanstd(feature_matrix, axis=0)
 
 # Plot feature over time

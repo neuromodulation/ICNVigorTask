@@ -21,8 +21,8 @@ warnings.filterwarnings("ignore")
 
 UPDRS = np.array(
     [None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None,
-     30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None,
-     None, 37])
+     30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, 48, None,
+     35, 37])
 
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
@@ -75,7 +75,7 @@ plt.xticks(fontsize=14)
 plt.savefig(f"../../Plots/median_med_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
 # Correlate median feature with UPDRS scores
-plt.figure(figsize=(12, 4))
+plt.figure(figsize=(14, 4))
 med = ["Off", "On", "All"]
 for i, dataset in enumerate(datasets):
     plt.subplot(1, 3, i+1)

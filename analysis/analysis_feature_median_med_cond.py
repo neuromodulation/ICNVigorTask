@@ -34,6 +34,9 @@ n_datasets, _,_, n_trials = feature_matrix.shape
 # Choose only the stimulation period
 feature_matrix = feature_matrix[:, :, :, :]
 
+# Detect and fill outliers (e.g. when subject did not touch the screen)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
@@ -77,6 +80,8 @@ if normalize:
     plt.ylabel(f"Median change in {feature_name_space} [%]", fontsize=14)
 else:
     plt.ylabel(f"{feature_name_space}", fontsize=14)
+plt.title(f"{block}", fontweight='bold')
+plt.legend('', frameon=False)
 plt.xticks(fontsize=14)
 
 # Save figure
@@ -84,7 +89,7 @@ plt.savefig(f"../../Plots/median_cond_{feature_name}_normalize_{normalize}_{bloc
 
 # Correlate median difference in feature between Slow/Fast with UPDRS scores
 median_feature_off = np.diff(median_feature_all[datasets_off, :], axis=1)
-UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, None, None, None, 37])
+UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, 48, None, 35, 37])
 UPDRS_off = UPDRS[datasets_off]
 median_feature_off = median_feature_off[UPDRS_off != None]
 UPDRS_off = UPDRS_off[UPDRS_off != None].astype(np.int32)
