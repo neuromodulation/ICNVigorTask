@@ -20,8 +20,8 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
-plot_individual = False
-med = "all"  # "on", "off", "all"
+plot_individual = True
+med = "on"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(28)
 elif med == "off":
@@ -37,7 +37,7 @@ feature_matrix = feature_matrix[datasets, :, :, :]
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
@@ -62,6 +62,7 @@ if plot_individual:
         plt.xlabel("Movement number", fontsize=14)
         feature_name_space = feature_name.replace("_", " ")
         plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
+        plt.title(f"dataset_{i}_{feature_name}_{med}")
         # Save figure on individual basis
         plt.savefig(f"../../Plots/dataset_{i}_{feature_name}_{med}.png", format="png", bbox_inches="tight")
         #plt.close()

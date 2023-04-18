@@ -62,12 +62,12 @@ else:
 n_datasets, _, n_trials = feature_matrix.shape
 
 # Define fitting function
-def func(x, a, b):
-    return 1 + a * x**b
+def func(x, a, b, c):
+    return c + a * x**b
 
 # Fit data to function
 x = np.arange(n_trials)
-params = np.zeros((n_datasets, 2, 2))
+params = np.zeros((n_datasets, 2, 3))
 conds = ["Slow", "Fast"]
 colors = ["#00863b", "#3b0086"]
 for i in range(n_datasets):
@@ -89,7 +89,7 @@ for i in range(n_datasets):
             plt.close()
 
 # Plot as boxplot
-plt.figure(figsize=(16, 2))
+plt.figure(figsize=(16, 4))
 plt.subplot(1, 4, 4)
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
 my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}

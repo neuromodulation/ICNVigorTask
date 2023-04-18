@@ -64,7 +64,7 @@ my_pal = {"Fast/Slow": "green", "Slow/Fast": "grey"}
 my_pal_trans = {"Fast/Slow": "lightgreen",  "Slow/Fast": "lightgrey"}
 x = np.concatenate((np.repeat("Slow/Fast", len(idx_slow_fast)), np.repeat("Fast/Slow", len(idx_fast_slow))))
 box = sb.boxplot(x=x, y=y, showfliers=False, palette=my_pal_trans)
-sb.stripplot(x=x, y=y, dodge=True, ax=box, palette=my_pal)
+sb.stripplot(x=x, y=y, ax=box, palette=my_pal)
 
 # Add statistics
 """add_stat_annotation(box, x=x, y=y,

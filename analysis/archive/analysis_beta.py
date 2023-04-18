@@ -4,13 +4,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import mne
-import easygui
+#import easygui
 import gc
 import os
+import utils.utils as utils
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
-from ICNVigorTask.utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
-    fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode, add_bipolar_channels, \
-    get_onset_idx, get_offset_idx, get_peak_idx, add_events
+#from utils.utils import reshape_data_trials, norm_speed, smooth_moving_average, plot_speed, \
+ #   fill_outliers, norm_perf_speed, norm_0_1, get_bids_filepath, add_average_channels_electrode, add_bipolar_channels, \
+ #   get_onset_idx, get_offset_idx, get_peak_idx, add_events
 
 bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"
 
@@ -25,7 +26,7 @@ peak_speed_cum_all = []
 for subject in subject_list:
 
     # Read one dataset from every participant
-    file_path = get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med=med)
+    file_path = utils.get_bids_filepath(root=bids_root, subject=subject, task="VigorStim", med=med)
     if not file_path:
         continue
 

@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_acc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 feature_name_space = feature_name.replace("_", " ")
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
@@ -37,11 +37,14 @@ feature_matrix = feature_matrix[:, :, 0, :]
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials))
 
-# Delete the first 5 movements
-feature_matrix = feature_matrix[:, :, 5:]
+# Detect and fill outliers (e.g. when subject did not touch the screen)
+np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
 
 # Get median speed at beginning of task
 median_feature_start = np.nanmedian(feature_matrix[:, :, :5], axis=(1, 2))
+
+# Delete the first 5 movements
+feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
 feature_matrix_non_norm = feature_matrix.copy()
@@ -52,13 +55,19 @@ if normalize:
 # Define x as the effect in the first half of the stimulation period (difference fast-slow)
 x = np.nanmedian(feature_matrix[datasets_off, 1, :45], axis=1) - np.nanmedian(
     feature_matrix[datasets_off, 0, :45], axis=1)
+
 # Loop over different measures that could be correlated
+
 off_fast_end = np.nanmedian(feature_matrix[datasets_off, 1, -45:], axis=1) - np.nanmedian(
     feature_matrix[datasets_off, 0, -45:], axis=1)
+
 init_feature = median_feature_start[datasets_off]
-diff_feature_fast = np.nanmedian(np.diff(feature_matrix_non_norm[datasets_off, 1, :45], axis=1), axis=1)
+
+diff_feature_fast = np.nanmedian(np.abs(np.diff(feature_matrix_non_norm[datasets_off, 1, :45], axis=1)), axis=1)
+
 range = np.mean(np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 95, axis=2) - \
         np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 5, axis=2), axis=1)
+
 features = [init_feature, off_fast_end, diff_feature_fast, range]
 labels = [f"Initial {feature_name_space}",
           f"Difference Fast-Slow of change in {feature_name_space} \n in second half of block[%]",
