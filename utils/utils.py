@@ -229,7 +229,7 @@ def get_bids_filepath(root, subject, task, med):
     """Return the filepath with the given specifications, if not existent return None"""
 
     # Get all datasets for the given subject
-    files = BIDSPath(root=root, subject=subject, suffix="ieeg").match()
+    files = BIDSPath(root=root, subject=subject, suffix="ieeg", description="neurobehav").match()
     # Get the corresponding file
     target_file = None
     for file in files:
@@ -345,6 +345,11 @@ def get_peak_idx(raw):
             peak_idx.append(mask[np.argmax(speed[:, mask])])
 
     return peak_idx
+
+def get_stim_idx(raw):
+    stim = raw.get_data(["STIMULATION"])
+    stim_idx = np.where(np.diff(stim) == 1)[1]
+    return stim_idx
 
 
 def add_events(raw, onset_idx, offset_idx, peak_idx):

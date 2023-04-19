@@ -51,7 +51,7 @@ if normalize:
 if block == "recovery":
     feature_matrix = feature_matrix[:, :, 91:]
 else:
-    feature_matrix = feature_matrix[:, :, :45]
+    feature_matrix = feature_matrix[:, :, :91]
 
 # Plot median speed for each medication and condition
 median_feature_all = np.nanmedian(feature_matrix, axis=2)

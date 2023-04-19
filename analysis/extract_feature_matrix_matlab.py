@@ -13,7 +13,7 @@ import seaborn as sb
 from scipy import stats
 import matplotlib
 import os
-from scipy.io import loadmat
+from scipy.io import loadmat, savemat
 import pandas as pd
 matplotlib.use('TkAgg')
 import warnings
@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "move_offset_time" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "mean_speed" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 slow_first_all = []
@@ -187,6 +187,9 @@ feature_all = np.array(feature_all)
 
 # Save matrix
 np.save(f"../../Data/{feature_name}.npy", feature_all)
+
+# Save matrix as mat
+savemat(f"../../Data/{feature_name}.mat", {"feature" : feature_all})
 
 # Save slow first
 np.save(f"../../Data/slow_first.npy", slow_first_all)

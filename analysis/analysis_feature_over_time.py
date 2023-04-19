@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
-plot_individual = True
+plot_individual = False
 med = "on"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(28)

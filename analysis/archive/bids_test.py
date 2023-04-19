@@ -36,9 +36,9 @@ inspect BIDS-formatted data.
 # We are importing everything we need for this example:
 import os
 import os.path as op
-import openneuro
+#import openneuro
 import mne
-mne.viz.set_browser_backend('qt')
+#mne.viz.set_browser_backend('qt')
 from mne.datasets import sample
 from mne_bids import BIDSPath, read_raw_bids, print_dir_tree, make_report
 
@@ -61,7 +61,7 @@ dataset = 'ds002778'
 subject = 'EL006'
 
 # Download one subject's data from each dataset
-bids_root = "D:\\rawdata\\rawdata\\" # op.join(op.dirname(sample.data_path()), dataset)
+bids_root = "C:\\Users\\alessia\\Documents\\Jobs\\ICN\\vigor-stim\\Data\\rawdata\\"# op.join(op.dirname(sample.data_path()), dataset)
 subject = "EL006"
 bids_path = BIDSPath(root=bids_root, suffix="ieeg", subject=subject, task="VigorStimR", description="neurobehav")
 
