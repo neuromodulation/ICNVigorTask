@@ -179,7 +179,7 @@ def plot_bins(array, std=None, color_slow="#00863b", color_fast="#3b0086"):
     plt.plot(array[:, 0], label="Slow", color=color_slow, linewidth=3)
     plt.plot(array[:, 1], label="Fast", color=color_fast, linewidth=3)
     # Add line at 0
-    plt.axhline(0, linewidth=1, color="black", linestyle="dashed")
+    #plt.axhline(0, linewidth=1, color="black", linestyle="dashed")
     x = np.arange(array.shape[0])
     # add variance as shaded area
     if std is not None:
