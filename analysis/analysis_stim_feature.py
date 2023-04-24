@@ -16,13 +16,14 @@ import time
 from statannot import add_stat_annotation
 import seaborn as sb
 from scipy import stats
+from scipy.stats import percentileofscore
 import matplotlib
 matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "move_dur"
+feature_name = "peak_speed"
 plot_individual = False
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
@@ -41,7 +42,7 @@ for dataset in datasets:
     n_dataset, _, n_trials = feature_matrix.shape
 
     # Detect and fill outliers (e.g. when subject did not touch the screen)
-    np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=2, arr=feature_matrix)
+    np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
 
     # Load stim time matrix
     stim_time = np.load(f"../../Data/stim_time.npy")
@@ -60,11 +61,12 @@ for dataset in datasets:
     # Compute mean/median feature over all trials, only slow and only fast stimulated
     feature_all_cond = np.zeros((n_dataset, 3))
     # All
-    feature_all_cond[:, 2] = np.nanmedian(feature_matrix, axis=[1, 2])
+    feature_all_cond[:, 2] = np.ones(n_dataset)*50   #np.nanmedian(feature_matrix, axis=[1, 2])
     # Loop over conditions slow/fast
     for cond in range(2):
         for i in range(n_dataset):
-            feature_all_cond[i, cond] = np.nanmedian(feature_matrix[i, cond, :][stim[i, cond, :] == 1])
+            #feature_all_cond[i, cond] = np.nanmedian(feature_matrix[i, cond, :][stim[i, cond, :] == 1])
+            feature_all_cond[i, cond] = np.nanmedian([percentileofscore(feature_matrix[i, cond, :], x) for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
 
     # Save for plotting
     feature_all_med.extend(feature_all_cond.flatten())

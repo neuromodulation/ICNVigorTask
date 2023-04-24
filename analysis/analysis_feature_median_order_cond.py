@@ -79,3 +79,11 @@ plt.xticks(fontsize=14)
 plt.savefig(f"../../Plots/order_{feature_name}_normalize_{normalize}.svg", format="svg", bbox_inches="tight")
 
 plt.show()
+
+# Between subjects design: Compare blocks in which slow and fast were the first block
+feature_matrix_slow = np.nanmedian(feature_matrix[idx_slow_fast, 0, :], axis=1)
+feature_matrix_fast = np.nanmedian(feature_matrix[idx_fast_slow, 1, :], axis=1)
+plt.plot(feature_matrix_slow.flatten())
+plt.plot(feature_matrix_fast.flatten())
+plt.axhline(0)
+print("End")
