@@ -219,7 +219,7 @@ def fill_outliers_mean(array, threshold=3):
 def fill_outliers_nan(array, threshold=3):
     """Fill outliers in 1D array with nan"""
     # Get index of outliers
-    idx_outlier = np.where(np.abs(zscore(array)) > threshold)[0]
+    idx_outlier = np.where(np.abs(zscore(array, nan_policy='omit')) > threshold)[0]
     # Fill each outlier with mean of closest non outlier
     array[idx_outlier] = None
     return array

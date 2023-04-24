@@ -23,7 +23,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed"
+feature_name = "peak_deacc"
 plot_individual = False
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
@@ -55,8 +55,8 @@ for dataset in datasets:
     stim = stim.astype(int)
 
     # Delete the first 5 movements
-    feature_matrix = feature_matrix[:, :, 5:]
-    stim = stim[:, :, 5:]
+    feature_matrix = feature_matrix[:, :, 5:50]
+    stim = stim[:, :, 5:50]
 
     # Compute mean/median feature over all trials, only slow and only fast stimulated
     feature_all_cond = np.zeros((n_dataset, 3))
@@ -66,7 +66,7 @@ for dataset in datasets:
     for cond in range(2):
         for i in range(n_dataset):
             #feature_all_cond[i, cond] = np.nanmedian(feature_matrix[i, cond, :][stim[i, cond, :] == 1])
-            feature_all_cond[i, cond] = np.nanmedian([percentileofscore(feature_matrix[i, cond, :], x) for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
+            feature_all_cond[i, cond] = np.nanmedian([percentileofscore(feature_matrix[i, cond, :], x, nan_policy='omit') for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
 
     # Save for plotting
     feature_all_med.extend(feature_all_cond.flatten())

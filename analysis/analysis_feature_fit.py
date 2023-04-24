@@ -21,11 +21,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_deacc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 normalize = True
 plotting = False
-block = "recovery"
-med = "all" # "all", "on"
+block = "stim"
+med = "off" # "all", "on"
 if med == "all":
     dataset = np.arange(28)
 elif med == "off":
@@ -62,12 +62,12 @@ else:
 n_datasets, _, n_trials = feature_matrix.shape
 
 # Define fitting function
-def func(x, a, b, c):
-    return c + a * x**b
+def func(x, a, b):
+    return 1 + a * x**b
 
 # Fit data to function
 x = np.arange(n_trials)
-params = np.zeros((n_datasets, 2, 3))
+params = np.zeros((n_datasets, 2, 2))
 conds = ["Slow", "Fast"]
 colors = ["#00863b", "#3b0086"]
 for i in range(n_datasets):

@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "mean_speed" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "peak_acc" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 slow_first_all = []
@@ -57,14 +57,31 @@ for filename in os.listdir(matlab_files_root):
                 idx_peak_speed = np.argmax(data_mask[:, 3])
                 # Get idx of movement onset and offset (closest sample to peak below threshold)
                 move_thres = 300
-                onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
-                    np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                try:
+                    onset_idx = np.where(data_mask[:, 3] < move_thres)[0][
+                        np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) > 0)[1][-1]]
+                    #feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[onset_idx:idx_peak_speed, 3]), 85)
+                    feature[cond, block_type, i_trial - 1] = np.max(np.diff(data_mask[onset_idx:idx_peak_speed, 3]))
+                except:
+                    feature[cond, block_type, i_trial - 1] = None
+            elif feature_name == "peak_deacc":
+                # Get index of peak speed
+                idx_peak_speed = np.argmax(data_mask[:, 3])
+                # Get idx of movement onset and offset (closest sample to peak below threshold)
+                move_thres = 300
                 try:
                     offset_idx = np.where(data_mask[:, 3] < move_thres)[0][
                         np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
-                    feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[onset_idx:offset_idx, 3]), 95)
+                    feature[cond, block_type, i_trial - 1] = np.min(np.diff(data_mask[idx_peak_speed:offset_idx, 3]))
+                    #feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[idx_peak_speed:offset_idx, 3]), 5)
                 except:
-                    feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[onset_idx:, 3]), 95)
+                    feature[cond, block_type, i_trial - 1] = None
+                """plt.plot(data_mask[:,3])
+                plt.plot(data_mask[:, 4])
+                plt.plot(np.diff(data_mask[:, 3]))
+                plt.axvline(onset_idx)
+                plt.axvline(idx_peak_speed)
+                plt.show()"""
             elif feature_name == "stim_time":
                 idx_stim = np.where(data_mask[:, 10] == 1)[0]
                 if len(idx_stim) > 0:

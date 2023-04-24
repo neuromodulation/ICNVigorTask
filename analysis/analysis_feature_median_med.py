@@ -25,8 +25,8 @@ UPDRS = np.array(
      35, 37])
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
-normalize = True
+feature_name = "peak_acc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+normalize = False
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 datasets_on = [3, 4, 5, 7, 9, 10, 18, 21, 22, 23, 24, 25]
 datasets_all = np.arange(28)

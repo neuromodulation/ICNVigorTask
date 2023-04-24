@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_deacc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
@@ -37,7 +37,7 @@ feature_matrix = feature_matrix[datasets, :, :, :]
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
@@ -47,11 +47,10 @@ feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)
-#eature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 15)
+#feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Smooth over 5 consecutive movements for plotting
 feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)
-
 
 # Plot individual if needed
 if plot_individual:
@@ -68,7 +67,7 @@ if plot_individual:
         #plt.close()
 
 # Average over all datasets
-feature_matrix_mean = np.nanmean(feature_matrix, axis=0)
+feature_matrix_mean = np.nanmedian(feature_matrix, axis=0)
 feature_matrix_std = np.nanstd(feature_matrix, axis=0)
 
 # Plot feature over time

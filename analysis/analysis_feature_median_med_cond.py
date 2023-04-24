@@ -20,9 +20,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_deacc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 block = "stim" # recovery or stim
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 datasets_all = np.arange(28)
@@ -51,7 +51,7 @@ if normalize:
 if block == "recovery":
     feature_matrix = feature_matrix[:, :, 91:]
 else:
-    feature_matrix = feature_matrix[:, :, 45:91]
+    feature_matrix = feature_matrix[:, :, :91]
 
 # Plot median speed for each medication and condition
 median_feature_all = np.nanmedian(feature_matrix, axis=2)
