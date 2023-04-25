@@ -38,3 +38,16 @@ def plot_conds(array, var=None, color_slow="#00863b", color_fast="#3b0086"):
         plt.fill_between(x, array[1, :, :].flatten()[5:] - var[1, :, :].flatten()[5:],
                          array[1, :, :].flatten()[5:] + var[1, :, :].flatten()[5:]
                          , color=color_fast, alpha=0.25)
+
+# Check if stimulated movements overlap with post-hoc determined slow/fast movements
+for i in range(14):
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(stim[i, 0, :].flatten(), label="stimulated")
+    plt.plot(slow[i, 0, :].flatten(), label="slow")
+    plt.legend()
+    plt.subplot(2, 1, 2)
+    plt.plot(stim[i, 1, :].flatten(), label="stimulated")
+    plt.plot(fast[i, 1, :].flatten(), label="fast")
+    plt.legend()
+    plt.show()
