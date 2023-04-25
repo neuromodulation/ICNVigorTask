@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_deacc"
+feature_name = "peak_speed"
 plot_individual = False
 normalize = True
 datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]

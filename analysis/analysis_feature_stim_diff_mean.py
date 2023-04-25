@@ -21,13 +21,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_deacc"
+feature_name = "peak_acc"
 plot_individual = False
 normalize = True
 datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
-#dataset = datasets_off
-dataset = datasets_on
+dataset = datasets_off
+#dataset = datasets_on
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
@@ -69,7 +69,7 @@ if normalize:
 
 cond_names = ["Slow", "Fast"]
 half_names = ["First half", "Second half"]
-n_moves = 45
+n_moves = 90
 feature_matrix_start = feature_matrix[:, :, :n_moves]
 feature_matrix_nn_start = feature_matrix_non_norm[:, :, :n_moves]
 stim_start = stim[:, :, :n_moves]
