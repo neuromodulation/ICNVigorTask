@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_deacc" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "time_to_offset" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 block = "stim" # recovery or stim
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
