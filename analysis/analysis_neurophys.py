@@ -15,11 +15,11 @@ import utils.utils as utils
 bids_root = r"C:\\Users\\ICN\\Documents\\VigorStim\\Data\\rawdata\\"
 
 # Set subject ID
-subject = "EL015"
+subject = "EL013"
 
 # Load the dataset
 bids_path = BIDSPath(root=bids_root, subject=subject, task="VigorStimR", extension="vhdr", run="1",
-                     description="neurobehav", session="EcogLfpMedOn01", acquisition="StimOnB")
+                     description="neurobehav", session="EcogLfpMedOff01", acquisition="StimOnB")
 
 raw = read_raw_bids(bids_path=bids_path, verbose=False)
 raw.load_data()
@@ -38,7 +38,7 @@ raw.add_channels([new_chan_raw], force_update_info=True)
 raw.notch_filter(130)
 # Remove line noise
 raw.notch_filter(50)
-raw.filter(l_freq=1, h_freq=110)
+raw.filter(l_freq=4, h_freq=100)
 
 # Inspect raw data
 #raw.plot(block=True)
@@ -125,10 +125,10 @@ channel = "bipolar_4_5"# "LFP_L_01_STN_MT" # or "bipolar_4_5"
 fig, axes1 = plt.subplots(nrows=3, ncols=3)
 fig2, axes2 = plt.subplots(nrows=1, ncols=3)
 for i, idx in enumerate([onset_idx, peak_idx, offset_idx]):
-    idx = np.hstack((idx[96:96*2], idx[96*3:]))
+    #idx = np.hstack((idx[96:96*2], idx[96*3:]))
     n_moves = len(idx)
     events = np.stack((idx, np.zeros(n_moves), np.ones(n_moves))).T
-    epochs_onset = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.6, tmax=0.6)
+    epochs_onset = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.2)
     x = epochs_onset.get_data([channel])
 
     epochs_onset.plot_image(picks=[channel], axes=axes1[:, i], show=False)
@@ -136,10 +136,33 @@ for i, idx in enumerate([onset_idx, peak_idx, offset_idx]):
     # Inspect power
     #epochs_onset.plot_psd(fmin=10, fmax=40, average=True)
 
-    frequencies = np.arange(4, 50, 1)
+    frequencies = np.arange(15, 30, 1)
     power = mne.time_frequency.tfr_morlet(epochs_onset, n_cycles=2, return_itc=False,
                                           freqs=frequencies, decim=3)
-    power.plot([channel], axes=axes2[i], show=False, baseline=(-0.6, 0.6))
+    power.plot([channel], axes=axes2[i], show=False, baseline=(-0.1, 0))
+
+    # PLot slow vs fast
+    idx_slow = idx[:96]
+    n_moves = len(idx_slow)
+    events = np.stack((idx_slow, np.zeros(n_moves), np.ones(n_moves))).T
+    epochs_slow = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.3)
+    frequencies = np.arange(15, 30, 1)
+    power_slow = mne.time_frequency.tfr_morlet(epochs_slow, n_cycles=2, return_itc=False,
+                                          freqs=frequencies, decim=3)
+    power_slow_mean = np.mean(power_slow._data[-1, :, :], axis=0)
+    idx_fast = idx[96*2:963]
+    n_moves = len(idx_fast)
+    events = np.stack((idx_fast, np.zeros(n_moves), np.ones(n_moves))).T
+    epochs_fast = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.3)
+    frequencies = np.arange(15, 30, 1)
+    power_fast = mne.time_frequency.tfr_morlet(epochs_fast, n_cycles=2, return_itc=False,
+                                               freqs=frequencies, decim=3)
+    power_fast_mean = np.mean(power_fast._data[-1, :, :], axis=0)
+    # Plot
+    plt.figure()
+    plt.plot(power_slow_mean.flatten())
+    plt.plot(power_fast_mean.flatten())
+
 
 plt.show()
 
