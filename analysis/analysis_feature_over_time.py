@@ -19,9 +19,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "time_to_offset" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
-med = "off"  # "on", "off", "all"
+med = "on"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(28)
 elif med == "off":
@@ -43,11 +43,11 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, a
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
-feature_matrix = feature_matrix[:, :, 5:]
+feature_matrix = feature_matrix[:, :, 10:]
 
 # Normalize to average of first 5 movements
-feature_matrix = utils.norm_perc(feature_matrix)
-#feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
+#feature_matrix = utils.norm_perc(feature_matrix)
+feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Smooth over 5 consecutive movements for plotting
 feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=2)

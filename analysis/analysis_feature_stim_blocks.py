@@ -58,17 +58,20 @@ feature_matrix_non_norm = feature_matrix.copy()
 if normalize:
     feature_matrix = utils.norm_perc(feature_matrix)
 
-n_blocks = 5
-n_moves = 4
+n_blocks = 6
+n_moves = 5
 stim_block_median = np.zeros((n_dataset, 2, n_blocks))
 # Get the median feature in blocks in which 5 stimulations occured  (1-5, 5-10, 10-15, 15-20)
 for i in range(n_dataset):
     for cond in range(2):
         stim_cumsum = np.cumsum(stim[i, cond, :])
         for block in range(n_blocks):
-            idx_low = np.where(stim_cumsum == block * n_moves + 1)[0][0]
-            idx_high = np.where(stim_cumsum == (block + 1) * n_moves + 1)[0][0]
-            stim_block_median[i, cond, block] = np.nanmean(feature_matrix[i, cond, idx_low:idx_high], axis=0)
+            try:
+                idx_low = np.where(stim_cumsum == block * n_moves + 1)[0][0]
+                idx_high = np.where(stim_cumsum == (block + 1) * n_moves + 1)[0][0]
+                stim_block_median[i, cond, block] = np.nanmean(feature_matrix[i, cond, idx_low:idx_high], axis=0)
+            except:
+                stim_block_median[i, cond, block] = None
             #[i, cond, block] = np.nanmean(feature_matrix[i, cond, block * n_moves + 1:(block + 1) * n_moves + 1], axis=0)
 
 # Plot as grouped box plots

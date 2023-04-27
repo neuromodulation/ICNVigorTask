@@ -20,8 +20,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "time_to_offset" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
-block = "stim" # recovery or stim
+feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+block = "recovery" # recovery or stim
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
 normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
@@ -86,6 +86,7 @@ plt.xticks(fontsize=14)
 
 # Save figure
 plt.savefig(f"../../Plots/median_cond_{feature_name}_normalize_{normalize}_{block}.svg", format="svg", bbox_inches="tight")
+plt.show()
 
 # Correlate median difference in feature between Slow/Fast with UPDRS scores
 median_feature_off = np.diff(median_feature_all[datasets_off, :], axis=1)
