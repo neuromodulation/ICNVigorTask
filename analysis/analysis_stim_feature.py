@@ -23,9 +23,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_deacc"
+feature_name = "peak_speed"
 plot_individual = False
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 datasets = [datasets_off, datasets_on]
 
@@ -55,8 +55,8 @@ for dataset in datasets:
     stim = stim.astype(int)
 
     # Delete the first 5 movements
-    feature_matrix = feature_matrix[:, :, 5:50]
-    stim = stim[:, :, 5:50]
+    feature_matrix = feature_matrix[:, :, 5:]
+    stim = stim[:, :, 5:]
 
     # Compute mean/median feature over all trials, only slow and only fast stimulated
     feature_all_cond = np.zeros((n_dataset, 3))
@@ -93,8 +93,10 @@ add_stat_annotation(box, x=x, y=y, hue=hue,
                     test='Wilcoxon', text_format='simple', loc='inside', verbose=2)
 # Add labels
 feature_name_space = feature_name.replace("_", " ")
-plt.ylabel(f"Median {feature_name_space}", fontsize=14)
+plt.ylabel(f"Percentile of median {feature_name_space} \nof stimulated movements", fontsize=14)
 plt.xticks(fontsize=14)
+plt.subplots_adjust(left=0.2)
+utils.despine()
 
 # Save the figure
 plt.savefig(f"../../Plots/task_{feature_name}.svg", format="svg", bbox_inches="tight")

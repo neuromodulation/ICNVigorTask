@@ -20,7 +20,7 @@ def norm(array):
 
 def norm_perc(array):
     """Normalize feature to stimulation block start and return as percentage"""
-    mean_start = np.nanmean(array[..., :, :5], axis=-1)[..., np.newaxis]
+    mean_start = np.nanmean(array[..., :5], axis=-1)[..., np.newaxis]
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
@@ -186,6 +186,9 @@ def plot_bins(array, std=None, color_slow="#00863b", color_fast="#3b0086"):
         plt.fill_between(x, array[:, 0] - std[:, 0], array[:, 0] + std[:, 0], color=color_slow, alpha=0.25)
         plt.fill_between(x, array[:, 1] - std[:, 1], array[:, 1] + std[:, 1], color=color_fast, alpha=0.25)
 
+def despine():
+    axes = plt.gca()
+    axes.spines[['right', 'top']].set_visible(False)
 
 def adjust_plot(fig):
     # Set font size of tick labels

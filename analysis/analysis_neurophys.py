@@ -114,56 +114,48 @@ for i in onset_idx[-190:]:
     plt.axvline(i-100, color="green")
 plt.figure()
 for i in range(190):
-    plt.plot(x[i,:,:].flatten())
-    
+    plt.plot(x[i,:,:].flatten())   
     """
 
-# Create events array from onset_idx
-channel = "bipolar_4_5"# "LFP_L_01_STN_MT" # or "bipolar_4_5"
-
-# Plot in one plot
-fig, axes1 = plt.subplots(nrows=3, ncols=3)
+# Plot epoch data around movement onset, peak and offset
+channel = "bipolar_4_5"
+"""fig, axes1 = plt.subplots(nrows=3, ncols=3)
 fig2, axes2 = plt.subplots(nrows=1, ncols=3)
 for i, idx in enumerate([onset_idx, peak_idx, offset_idx]):
-    #idx = np.hstack((idx[96:96*2], idx[96*3:]))
     n_moves = len(idx)
     events = np.stack((idx, np.zeros(n_moves), np.ones(n_moves))).T
-    epochs_onset = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.2)
-    x = epochs_onset.get_data([channel])
+    epochs = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.2)
 
-    epochs_onset.plot_image(picks=[channel], axes=axes1[:, i], show=False)
+    epochs.plot_image(picks=[channel], axes=axes1[:, i], show=False)
 
     # Inspect power
-    #epochs_onset.plot_psd(fmin=10, fmax=40, average=True)
+    epochs.plot_psd(fmin=10, fmax=40, average=True)
 
     frequencies = np.arange(15, 30, 1)
-    power = mne.time_frequency.tfr_morlet(epochs_onset, n_cycles=2, return_itc=False,
+    power = mne.time_frequency.tfr_morlet(epochs, n_cycles=2, return_itc=False,
                                           freqs=frequencies, decim=3)
-    power.plot([channel], axes=axes2[i], show=False, baseline=(-0.1, 0))
+    power.plot([channel], axes=axes2[i], show=False, baseline=(-0.1, 0))"""
 
-    # PLot slow vs fast
-    idx_slow = idx[:96]
-    n_moves = len(idx_slow)
-    events = np.stack((idx_slow, np.zeros(n_moves), np.ones(n_moves))).T
-    epochs_slow = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.3)
-    frequencies = np.arange(15, 30, 1)
-    power_slow = mne.time_frequency.tfr_morlet(epochs_slow, n_cycles=2, return_itc=False,
-                                          freqs=frequencies, decim=3)
-    power_slow_mean = np.mean(power_slow._data[-1, :, :], axis=0)
-    idx_fast = idx[96*2:963]
-    n_moves = len(idx_fast)
-    events = np.stack((idx_fast, np.zeros(n_moves), np.ones(n_moves))).T
-    epochs_fast = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=-0.2, tmax=0.3)
-    frequencies = np.arange(15, 30, 1)
-    power_fast = mne.time_frequency.tfr_morlet(epochs_fast, n_cycles=2, return_itc=False,
-                                               freqs=frequencies, decim=3)
-    power_fast_mean = np.mean(power_fast._data[-1, :, :], axis=0)
-    # Plot
-    plt.figure()
-    plt.plot(power_slow_mean.flatten())
-    plt.plot(power_fast_mean.flatten())
+# Inspect power around onset (without artifacts)
+n_moves = len(onset_idx)
+events = np.stack((onset_idx, np.zeros(n_moves), np.ones(n_moves))).T
+epochs_onset = mne.Epochs(raw, events=events.astype(int), event_id=1, tmin=0, tmax=0.3, baseline=None)
+frequencies = np.arange(13, 35, 1)
+power = mne.time_frequency.tfr_morlet(epochs_onset, n_cycles=2, return_itc=False,
+                                          freqs=frequencies, decim=3, average=False)
+# Plot slow vs fast
+av_power = np.median(power._data[:, -1, :, ], axis=[1, 2])
+power_slow = utils.norm_perc(av_power[96:96*2])
+power_fast = utils.norm_perc(av_power[96*3:])
+power_slow = av_power[96:96*2]
+power_fast = av_power[96*3:]
 
-
+# Plot
+my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
+my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+plt.figure()
+plt.plot(power_slow.flatten(), color=my_pal["Slow"])
+plt.plot(power_fast.flatten(), color=my_pal["Fast"])
 plt.show()
 
 

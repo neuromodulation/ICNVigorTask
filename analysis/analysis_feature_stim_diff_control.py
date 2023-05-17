@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 feature_name = "peak_speed"
 plot_individual = False
 normalize = True
-datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 dataset = datasets_off
 #dataset = datasets_on
@@ -33,7 +33,7 @@ dataset = datasets_off
 
 # Load feature matrix, slow, fast and stim time
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
-feature_matrix_speed = np.load(f"../../Data/peak_deacc.npy")
+feature_matrix_speed = np.load(f"../../Data/peak_speed.npy")
 slow = np.load(f"../../Data/slow.npy")
 fast = np.load(f"../../Data/fast.npy")
 stim_time = np.load(f"../../Data/stim_time.npy")

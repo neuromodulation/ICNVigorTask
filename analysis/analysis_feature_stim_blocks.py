@@ -21,11 +21,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed"
+feature_name = "peak_deacc"
 plot_individual = False
 normalize = True
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
-datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
+datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
 
@@ -58,7 +58,7 @@ feature_matrix_non_norm = feature_matrix.copy()
 if normalize:
     feature_matrix = utils.norm_perc(feature_matrix)
 
-n_blocks = 6
+n_blocks = 4
 n_moves = 5
 stim_block_median = np.zeros((n_dataset, 2, n_blocks))
 # Get the median feature in blocks in which 5 stimulations occured  (1-5, 5-10, 10-15, 15-20)
@@ -100,13 +100,14 @@ add_stat_annotation(box, x=x, y=y, hue=hue,
 # Add labels
 feature_name_space = feature_name.replace("_", " ")
 if normalize:
-    plt.ylabel(f"Median change in {feature_name_space} [%]", fontsize=14)
+    plt.ylabel(f"Mean change in {feature_name_space} [%]", fontsize=14)
 else:
     plt.ylabel(f"{feature_name_space}", fontsize=14)
 plt.xlabel(f"Number of stimulated trials", fontsize=14)
 plt.legend('', frameon=False)
 plt.xticks(fontsize=14)
+utils.despine()
 
 # Save figure
-plt.savefig(f"../../Plots/median_block_stim_{feature_name}_normalize_{normalize}_{block}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/median_block_stim_{feature_name}_normalize_{normalize}_{n_blocks}.svg", format="svg", bbox_inches="tight")
 plt.show()
