@@ -59,36 +59,40 @@ for dataset in datasets:
     stim = stim[:, :, 5:]
 
     # Compute mean/median feature over all trials, only slow and only fast stimulated
-    feature_all_cond = np.zeros((n_dataset, 3))
-    # All
-    feature_all_cond[:, 2] = np.ones(n_dataset)*50   #np.nanmedian(feature_matrix, axis=[1, 2])
+    feature_all_cond = np.zeros((n_dataset, 2))
     # Loop over conditions slow/fast
-    for cond in range(2):
-        for i in range(n_dataset):
-            #feature_all_cond[i, cond] = np.nanmedian(feature_matrix[i, cond, :][stim[i, cond, :] == 1])
+    plt.figure(figsize=(12, 8))
+    for i in range(n_dataset):
+        feature_tmp = []
+        for cond in range(2):
             feature_all_cond[i, cond] = np.nanmedian([percentileofscore(feature_matrix[i, cond, :], x, nan_policy='omit') for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
-
+            feature_tmp.append([percentileofscore(feature_matrix[i, cond, :], x, nan_policy='omit') for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
+        # Plot violin plot for each dataset
+        plt.subplot(int(np.floor(n_dataset/4)), int(np.ceil(n_dataset/4)), i+1)
+        y = feature_tmp[0] + feature_tmp[1]
+        x = np.concatenate((np.repeat("Slow", len(feature_tmp[0])),np.repeat("Fast", len(feature_tmp[1]))))
+        my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+        sb.violinplot(x=x, y=y, showfliers=False, palette=my_pal_trans, split=True)
+        plt.xticks([])
+    plt.subplots_adjust(wspace=0.1, hspace=0.1)
+    plt.show()
     # Save for plotting
     feature_all_med.extend(feature_all_cond.flatten())
 
 # Plot as boxplot
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
 my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
-x = np.concatenate((np.repeat("Off", len(datasets_off)*3), np.repeat("On", len(datasets_on)*3)))
-hue = np.array([["Slow", "Fast", "All"] for i in range(len(datasets_off) + len(datasets_on))]).flatten()
+x = np.concatenate((np.repeat("Off", len(datasets_off)*2), np.repeat("On", len(datasets_on)*2)))
+hue = np.array([["Slow", "Fast"] for i in range(len(datasets_off) + len(datasets_on))]).flatten()
 y = np.array(feature_all_med)
 fig = plt.figure()
-box = sb.boxplot(x=x, y=feature_all_med, hue=hue, showfliers=False, palette=my_pal_trans)
+box = sb.violinplot(x=x, y=feature_all_med, hue=hue, showfliers=False, palette=my_pal_trans, split=True)
 sb.stripplot(x=x, y=feature_all_med, dodge=True, ax=box, hue=hue, palette=my_pal, legend=None)
 
 # Add statistics
 add_stat_annotation(box, x=x, y=y, hue=hue,
                     box_pairs=[(("Off", "Slow"), ("Off", "Fast")),
-                               (("On", "Slow"), ("On", "All")),
-                               (("Off", "Slow"), ("Off", "All")),
-                               (("On", "Fast"), ("On", "All")),
-                               (("On", "Slow"), ("On", "Fast")),
-                               (("Off", "Fast"), ("Off", "All"))
+                               (("On", "Slow"), ("On", "Fast"))
                                ],
                     test='Wilcoxon', text_format='simple', loc='inside', verbose=2)
 # Add labels

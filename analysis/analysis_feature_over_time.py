@@ -43,7 +43,7 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, a
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
-feature_matrix = feature_matrix[:, :, 5:]
+feature_matrix = feature_matrix[:, :, 3:]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)

@@ -25,7 +25,7 @@ feature_name = "peak_speed"
 plot_individual = False
 normalize = True
 datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
-datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
+datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
 
@@ -80,8 +80,8 @@ for i in range(n_dataset):
     percentile_stim[i, 0] = np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 1, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 1, :][stim_start[i, 1, :] == 1]])
     percentile_stim[i, 1] = np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 0, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 0, :][fast_start[i, 0, :] == 1]])
     #percentile_stim[i] = np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 0, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 0, :][stim_start[i, 0, :] == 1]])
-    #percentile_stim[i] = np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 0, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 0, :][stim_start[i, 0, :] == 1]]) - \
-    #                     np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 1, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 1, :][stim_start[i, 1, :] == 1]])
+    percentile_stim[i, 0] = np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 0, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 0, :][stim_start[i, 0, :] == 1]]) - \
+                         np.nanmedian([percentileofscore(feature_matrix_nn_start[i, 1, :], x, nan_policy='omit') for x in feature_matrix_nn_start[i, 1, :][stim_start[i, 1, :] == 1]])
 
 # Correlate percentile of fast stimulated movements with stimulation effect
 plt.figure(figsize=(11, 8))
