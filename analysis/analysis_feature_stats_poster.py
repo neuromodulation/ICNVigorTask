@@ -56,7 +56,7 @@ feature_matrix = utils.norm_perc(feature_matrix)
 fig = plt.figure()
 color_slow = "#00863b"
 color_fast = "#3b0086"
-bar_pos = [1, 2.5, 4, 5.5]
+bar_pos = [1, 2]
 for i in range(1, 3):
 
     # Median over all movements in that period
@@ -79,15 +79,15 @@ for i in range(1, 3):
 
     # Add statistics
     z, p = scipy.stats.wilcoxon(x=feature_matrix_mean[:, 0], y=feature_matrix_mean[:, 1])
-    sig = "bold" if p < 0.05 else "regular"
-    plt.text(bar_pos[i-1]-0.5, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig)
+    sig = "bold" if p < 5 else "regular"
+    plt.text(bar_pos[i-1]-0.25, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig)
 
 # Adjust plot
-plt.xticks(bar_pos, ["First half \n stimulation","Second half \n stimulation", "First half \n recovery", "Second half \n recovery"], fontsize=14)
+plt.xticks(bar_pos, ["Stimulation", "Recovery"], fontsize=14)
 feature_name_space = feature_name.replace("_", " ")
 plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
 plt.subplots_adjust(bottom=0.2, left=0.15)
-plt.legend(loc="best")
+#plt.legend(loc="best")
 utils.adjust_plot(fig)
 axes = plt.gca()
 axes.spines[['right', 'top']].set_visible(False)

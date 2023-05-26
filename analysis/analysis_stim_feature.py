@@ -28,7 +28,7 @@ feature_name = "peak_speed"
 plot_individual = False
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
-datasets = [datasets_off, datasets_on]
+datasets = [datasets_off]
 
 # Loop over the medication condition
 

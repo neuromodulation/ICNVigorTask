@@ -21,9 +21,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_dec"
+feature_name = "peak_speed"
 normalize = True
-datasets_off = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
@@ -43,11 +43,12 @@ n_dataset, _, _, n_trials = feature_matrix.shape
 
 # Delete outliers
 np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
-np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+#np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Loop over stimulation and recovery blocks
 block_names = ["Stimulation", "Recovery"]
-plt.figure(figsize=(10, 4))
+plt.figure(figsize=(5, 4))
+colors = ["#763c29", "#293c76"]
 for block in range(2):
 
     # Select only the block of interest and delete the first 5 movements
@@ -66,7 +67,7 @@ for block in range(2):
     slow_tmp = slow_tmp[:, :, :45]"""
 
     # Get the difference in peak speed between the conditions for all datasets
-    diff_effect = np.nanmedian(feature_matrix_tmp[:, 1, :], axis=1) - np.nanmedian(feature_matrix_tmp[:, 0, :], axis=1)
+    diff_effect = np.nanmean(feature_matrix_tmp[:, 1, :], axis=1) - np.nanmean(feature_matrix_tmp[:, 0, :], axis=1)
 
     # Get the difference between percentile of Slow vs Fast movements for all datasets
     diff_percentile_stim = np.zeros(n_dataset)
@@ -84,17 +85,20 @@ for block in range(2):
                                       np.nanmedian([percentileofscore(feature_matrix_tmp[i, 0, :], x, nan_policy='omit')
                                                     for x in feature_matrix_tmp[i, 0, :][slow_tmp[i, 0, :] == 1]])
     # Compute correlation coefficient and plot
-    plt.subplot(1, 2, block+1)
+    #plt.subplot(1, 2, block+1)
     x = diff_effect
     y = diff_percentile_stim
     corr, p = spearmanr(x, y, nan_policy='omit')
-    sb.regplot(x=x, y=y)
-    plt.title(f"corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
+    sb.regplot(x=x, y=y, label=f"{block_names[block]}: corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", color=colors[block])
+    #plt.title(f"corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
     feature_name_space = feature_name.replace("_", " ")
-    plt.xlabel(f"Difference Fast-Slow of change \n in peak speed [%]", fontsize=12)
-    plt.ylabel(f"Difference of stimulated percentile of \n {feature_name_space} in block {block_names[block]}", fontsize=12)
+    plt.xlabel(f"Difference of mean peak speed \n [Fast - Slow %]", fontsize=12)
+    plt.ylabel(f"Difference of peak speed of stimulated \n movements [Fast - Slow percentile]", fontsize=12)
 
 plt.subplots_adjust(left=0.2, bottom=0.2, wspace=0.4, hspace=0.4)
+legend_properties = {'weight':'bold'}
+plt.legend(prop=legend_properties)
+utils.despine()
 
 # Save the figure
 plt.savefig(f"../../Plots/predict_effect_{feature_name}.svg", format="svg", bbox_inches="tight")
