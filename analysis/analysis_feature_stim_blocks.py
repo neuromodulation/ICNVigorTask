@@ -21,10 +21,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_deacc"
+feature_name = "peak_speed"
 plot_individual = False
 normalize = True
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
@@ -37,7 +37,7 @@ feature_matrix = feature_matrix[dataset, :, 0, :]
 n_dataset, _, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
-np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=2, arr=feature_matrix)
 
 # Load stim time matrix
 stim_time = np.load(f"../../Data/stim_time.npy")

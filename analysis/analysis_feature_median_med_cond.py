@@ -24,7 +24,7 @@ feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "pea
 block = "stim" # recovery or stim
 datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 normalize = True
-datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
+datasets_on = [4, 5, 9, 10, 12, 18, 22, 23, 24, 25, 29]
 datasets_all = np.arange(30)
 
 # Load feature matrix
@@ -51,7 +51,7 @@ else:
     feature_matrix = feature_matrix[:, :, :91]
 
 # Plot median speed for each medication and condition
-median_feature_all = np.nanmedian(feature_matrix, axis=2)
+median_feature_all = np.nanmean(feature_matrix, axis=2)
 median_feature_off = median_feature_all[datasets_off, :]
 median_feature_on = median_feature_all[datasets_on, :]
 median_feature = np.concatenate((median_feature_off.flatten(), median_feature_on.flatten(), median_feature_all.flatten()))

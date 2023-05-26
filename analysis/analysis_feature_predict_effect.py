@@ -21,9 +21,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed"
+feature_name = "peak_dec"
 normalize = True
-datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
@@ -42,7 +42,8 @@ slow = slow[dataset, :, :, :]
 n_dataset, _, _, n_trials = feature_matrix.shape
 
 # Delete outliers
-np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Loop over stimulation and recovery blocks
 block_names = ["Stimulation", "Recovery"]

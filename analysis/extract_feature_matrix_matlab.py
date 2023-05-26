@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "peak_acc" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "peak_dec" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 slow_first_all = []
@@ -64,7 +64,7 @@ for filename in os.listdir(matlab_files_root):
                     feature[cond, block_type, i_trial - 1] = np.max(np.diff(data_mask[onset_idx:idx_peak_speed, 3]))
                 except:
                     feature[cond, block_type, i_trial - 1] = None
-            elif feature_name == "peak_deacc":
+            elif feature_name == "peak_dec":
                 # Get index of peak speed
                 idx_peak_speed = np.argmax(data_mask[:, 3])
                 # Get idx of movement onset and offset (closest sample to peak below threshold)
@@ -72,8 +72,8 @@ for filename in os.listdir(matlab_files_root):
                 try:
                     offset_idx = np.where(data_mask[:, 3] < move_thres)[0][
                         np.where((idx_peak_speed - np.where(data_mask[:, 3] < move_thres)) < 0)[1][0]]
-                    feature[cond, block_type, i_trial - 1] = np.min(np.diff(data_mask[idx_peak_speed:offset_idx, 3]))
-                    #feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[idx_peak_speed:offset_idx, 3]), 5)
+                    #feature[cond, block_type, i_trial - 1] = np.min(np.diff(data_mask[idx_peak_speed:offset_idx, 3]))
+                    feature[cond, block_type, i_trial - 1] = np.percentile(np.diff(data_mask[idx_peak_speed:offset_idx, 3]), 5)
                 except:
                     feature[cond, block_type, i_trial - 1] = None
             elif feature_name == "median_deacc":

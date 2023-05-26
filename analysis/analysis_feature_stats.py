@@ -19,14 +19,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Set analysis parameters
-feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
+feature_name = "peak_dec" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 plot_individual = False
 med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27]
+    datasets = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
@@ -39,12 +38,13 @@ n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
-feature_matrix = feature_matrix[:, :, 5:]
+feature_matrix = feature_matrix[:, :, :]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)
@@ -57,10 +57,10 @@ fig = plt.figure()
 color_slow = "#00863b"
 color_fast = "#3b0086"
 bar_pos = [1, 2.5, 4, 5.5]
-for i in range(1, 5):
+for i in range(1, 3):
 
     # Median over all movements in that period
-    feature_matrix_mean = np.nanmedian(feature_matrix[:, :, int(45*(i-1)):int(45*i)], axis=2)
+    feature_matrix_mean = np.nanmean(feature_matrix[:, :, int(91*(i-1)):int(91*i)], axis=2)
 
     # Plot the mean bar
     if i == 1:

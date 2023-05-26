@@ -25,9 +25,9 @@ med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(30)
 elif med == "off":
-    datasets = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+    datasets = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 else:
-    datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
+    datasets = [4, 5, 9, 10, 12, 18, 22, 23, 24, 25, 29]
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
@@ -38,12 +38,13 @@ n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
-feature_matrix = feature_matrix[:, :, 3:]
+feature_matrix = feature_matrix[:, :, :]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)

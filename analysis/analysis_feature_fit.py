@@ -25,13 +25,13 @@ feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "pea
 normalize = True
 plotting = False
 block = "stim"
-med = "off" # "all", "on"
+med = "on" # "all", "on"
 if med == "all":
     dataset = np.arange(28)
 elif med == "off":
     dataset = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 else:
-    dataset = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
+    dataset = [4, 5, 9, 10, 12, 18, 22, 23, 24, 25, 29]
 
 
 # Load feature matrix

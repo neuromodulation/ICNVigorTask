@@ -18,6 +18,7 @@ import seaborn as sb
 from scipy import stats
 from scipy.stats import percentileofscore
 import matplotlib
+from scipy.special import kl_div
 matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
@@ -61,23 +62,56 @@ for dataset in datasets:
     # Compute mean/median feature over all trials, only slow and only fast stimulated
     feature_all_cond = np.zeros((n_dataset, 2))
     # Loop over conditions slow/fast
-    plt.figure(figsize=(12, 8))
+    feature_slow = []
+    feature_fast = []
+    plt.figure(figsize=(10, 5))
     for i in range(n_dataset):
         feature_tmp = []
         for cond in range(2):
             feature_all_cond[i, cond] = np.nanmedian([percentileofscore(feature_matrix[i, cond, :], x, nan_policy='omit') for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
             feature_tmp.append([percentileofscore(feature_matrix[i, cond, :], x, nan_policy='omit') for x in feature_matrix[i, cond, :][stim[i, cond, :] == 1]])
+
         # Plot violin plot for each dataset
-        plt.subplot(int(np.floor(n_dataset/4)), int(np.ceil(n_dataset/4)), i+1)
+        plt.subplot(int(np.floor(n_dataset/4)), int(np.ceil(n_dataset/4)+1), i+1)
         y = feature_tmp[0] + feature_tmp[1]
         x = np.concatenate((np.repeat("Slow", len(feature_tmp[0])),np.repeat("Fast", len(feature_tmp[1]))))
         my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
         sb.violinplot(x=x, y=y, showfliers=False, palette=my_pal_trans, split=True)
+        utils.despine()
         plt.xticks([])
-    plt.subplots_adjust(wspace=0.1, hspace=0.1)
-    plt.show()
+
+        # Save for group plot
+        feature_slow.extend(feature_tmp[0])
+        feature_fast.extend(feature_tmp[1])
+
+    plt.subplots_adjust(wspace=0.3, hspace=0.2)
+    #plt.show()
+
     # Save for plotting
     feature_all_med.extend(feature_all_cond.flatten())
+
+# Plot as group violin plot
+plt.figure(figsize=(8, 3))
+y = []
+for i in range(len(feature_slow)):
+    if i < len(feature_fast):
+        y.extend([feature_slow[i], feature_fast[i]])
+    else:
+        y.extend([feature_slow[i], np.NaN])
+y = y+y
+hue = np.array([["Slow", "Fast"] for i in range(len(feature_slow)*2)]).flatten()
+x = np.concatenate((np.repeat("1", len(feature_slow)*2), np.repeat("2", len(feature_slow)*2))).flatten()
+my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
+sb.violinplot(x=x.flatten(), y=np.array(y).flatten(), split=True, showfliers=False, hue=hue, palette=my_pal_trans, cut=0)
+utils.despine()
+plt.ylabel(f"Percentile of stimulated movements \n(Peak speed)", fontsize=12)
+plt.subplots_adjust(left=0.2)
+plt.xticks([])
+
+# Save the figure
+plt.savefig(f"../../Plots/task_{feature_name}_violin.svg", format="svg", bbox_inches="tight")
+
+plt.show()
 
 # Plot as boxplot
 my_pal = {"Slow": "#00863b", "Fast": "#3b0086", "All": "grey"}
@@ -86,7 +120,7 @@ x = np.concatenate((np.repeat("Off", len(datasets_off)*2), np.repeat("On", len(d
 hue = np.array([["Slow", "Fast"] for i in range(len(datasets_off) + len(datasets_on))]).flatten()
 y = np.array(feature_all_med)
 fig = plt.figure()
-box = sb.violinplot(x=x, y=feature_all_med, hue=hue, showfliers=False, palette=my_pal_trans, split=True)
+box = sb.boxplot(x=x, y=feature_all_med, hue=hue, showfliers=False, palette=my_pal_trans)
 sb.stripplot(x=x, y=feature_all_med, dodge=True, ax=box, hue=hue, palette=my_pal, legend=None)
 
 # Add statistics
