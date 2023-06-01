@@ -37,7 +37,7 @@ n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
 np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
-np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
+#np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, arr=feature_matrix)
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
@@ -55,7 +55,7 @@ else:
     feature_matrix = feature_matrix[:, :, :91]
 
 # Compute difference
-outcome_measure = np.nanmedian(feature_matrix[:, 1, :], axis=1) - np.nanmedian(feature_matrix[:, 0, :], axis=1)
+outcome_measure = np.nanmean(feature_matrix[:, 1, :], axis=1) - np.nanmean(feature_matrix[:, 0, :], axis=1)
 outcome_measure = outcome_measure[datasets]
 
 # Check if correct
@@ -64,7 +64,7 @@ for i, filename in enumerate(filenames):
     if i in datasets: print(filename)
 
 # Save as tex file
-with open(f"{feature_name}_median.txt", "w") as o:
+with open(f"{feature_name}_mean.txt", "w") as o:
     for line, dataset in zip(outcome_measure, datasets):
         print("{} {}".format(patients[dataset], line), file=o)
 

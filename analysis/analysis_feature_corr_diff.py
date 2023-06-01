@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 feature_name_space = feature_name.replace("_", " ")
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
 normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 datasets_all = np.arange(30)
@@ -53,8 +53,8 @@ if normalize:
    #feature_matrix = utils.norm_perc_every_t_trials(feature_matrix, 45)
 
 # Define x as the effect in the first half of the stimulation period (difference fast-slow)
-x = np.nanmedian(feature_matrix[datasets_off, 1, :45], axis=1) - np.nanmedian(
-    feature_matrix[datasets_off, 0, :45], axis=1)
+x = np.nanmean(feature_matrix[datasets_off, 1, :], axis=1) - np.nanmean(
+    feature_matrix[datasets_off, 0, :], axis=1)
 # Loop over different measures that could be correlated
 
 off_fast_end = np.nanmedian(feature_matrix[datasets_off, 1, -45:], axis=1) - np.nanmedian(
@@ -90,6 +90,7 @@ for i, y in enumerate(features):
     # Add labels
     if normalize:
         plt.xlabel(f"Difference Fast-Slow of change in {feature_name_space} \n in first half of block[%]", fontsize=12)
+        plt.xlabel(    f"Difference of mean peak speed \n [Fast - Slow %]", fontsize=12)
     else:
         plt.xlabel(f"Difference Fast-Slow in {feature_name_space} \n in first half of block[%]", fontsize=12)
     plt.ylabel(labels[i], fontsize=12)
