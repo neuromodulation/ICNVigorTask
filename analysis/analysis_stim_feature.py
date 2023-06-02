@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed"
 plot_individual = False
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 datasets = [datasets_off]
 
@@ -43,7 +43,7 @@ for dataset in datasets:
     n_dataset, _, n_trials = feature_matrix.shape
 
     # Detect and fill outliers (e.g. when subject did not touch the screen)
-    np.apply_along_axis(lambda m: utils.fill_outliers_mean(m, threshold=3), axis=2, arr=feature_matrix)
+    np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=2, arr=feature_matrix)
 
     # Load stim time matrix
     stim_time = np.load(f"../../Data/stim_time.npy")
@@ -91,7 +91,7 @@ for dataset in datasets:
     feature_all_med.extend(feature_all_cond.flatten())
 
 # Plot as group violin plot
-plt.figure(figsize=(8, 3))
+plt.figure(figsize=(10, 5))
 y = []
 for i in range(len(feature_slow)):
     if i < len(feature_fast):
@@ -104,12 +104,13 @@ x = np.concatenate((np.repeat("1", len(feature_slow)*2), np.repeat("2", len(feat
 my_pal_trans = {"Slow": "#80c39d", "Fast": "#9c80c2", "All": "lightgrey"}
 sb.violinplot(x=x.flatten(), y=np.array(y).flatten(), split=True, showfliers=False, hue=hue, palette=my_pal_trans, cut=0)
 utils.despine()
-plt.ylabel(f"Percentile of stimulated movements \n(Peak speed)", fontsize=12)
+plt.ylabel(f"Percentile of stimulated \nmovements (Peak speed)", fontsize=20)
 plt.subplots_adjust(left=0.2)
+plt.yticks(fontsize=16)
 plt.xticks([])
 
 # Save the figure
-plt.savefig(f"../../Plots/task_{feature_name}_violin.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/task_{feature_name}_violin.svg", format="svg", bbox_inches="tight", transparent=True)
 
 plt.show()
 

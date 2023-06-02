@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 feature_name_space = feature_name.replace("_", " ")
-datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 normalize = True
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 datasets_all = np.arange(30)
@@ -67,7 +67,7 @@ diff_feature_fast = np.nanmedian(np.abs(np.diff(feature_matrix_non_norm[datasets
 range = np.mean(np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 95, axis=2) - \
         np.percentile(feature_matrix_non_norm[datasets_off, :, :45], 5, axis=2), axis=1)
 
-UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, 48, None, 35, 37, 36])
+UPDRS = np.array([None, 26, 31, 22, 22, 27, 14, 14, 25, 18, 33, None, 30, 12, 28, 13, 27, 35, 28, 32, 23, 15, 14, None, 48, None, 35, 37, 36, None, 13])
 UPDRS_off = UPDRS[datasets_off]
 
 features = [init_feature, off_fast_end, diff_feature_fast, range, UPDRS_off]

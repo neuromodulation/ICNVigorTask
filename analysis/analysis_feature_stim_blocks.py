@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore")
 feature_name = "peak_speed"
 plot_individual = False
 normalize = True
-datasets_off = [8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on

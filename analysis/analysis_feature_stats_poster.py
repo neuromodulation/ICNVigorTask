@@ -25,7 +25,7 @@ med = "off"  # "on", "off", "all"
 if med == "all":
     datasets = np.arange(26)
 elif med == "off":
-    datasets = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+    datasets = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 else:
     datasets = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25]
 
@@ -47,13 +47,13 @@ feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
 feature_matrix = feature_matrix[:, :, 5:]
 
 # Normalize to average of first 5 movements
-feature_matrix = utils.norm_perc(feature_matrix)
-#feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 45)
+#feature_matrix = utils.norm_perc(feature_matrix)
+feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 91)
 
 #feature_matrix = np.nancumsum(np.diff(feature_matrix, axis=2), axis=2)
 
 # Compute significance for first/last half of stimulation/recovery
-fig = plt.figure()
+fig = plt.figure(figsize=(5.6, 5.6))
 color_slow = "#00863b"
 color_fast = "#3b0086"
 bar_pos = [1, 2]
@@ -75,24 +75,27 @@ for i in range(1, 3):
         plt.plot(bar_pos[i-1]-0.25, dat[0], marker='o', markersize=3, color=color_slow)
         plt.plot(bar_pos[i-1] + 0.25, dat[1], marker='o', markersize=3, color=color_fast)
         # Add line connecting the points
-        plt.plot([bar_pos[i-1]-0.25, bar_pos[i-1]+0.25], dat, color="black", linewidth=0.5, alpha=0.5)
+        plt.plot([bar_pos[i-1]-0.25, bar_pos[i-1]+0.25], dat, color="black", linewidth=0.7, alpha=0.5)
 
     # Add statistics
     z, p = scipy.stats.wilcoxon(x=feature_matrix_mean[:, 0], y=feature_matrix_mean[:, 1])
-    sig = "bold" if p < 5 else "regular"
-    plt.text(bar_pos[i-1]-0.25, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig)
+    sig = "bold" if p < 0.05 else "regular"
+    plt.text(bar_pos[i-1]-0.25, np.max(feature_matrix_mean)+5, f"p = {np.round(p, 3)}", weight=sig, fontsize=18)
+    plt.yticks(fontsize=16)
 
 # Adjust plot
-plt.xticks(bar_pos, ["Stimulation", "Recovery"], fontsize=14)
+plt.xticks(bar_pos, ["Stimulation", "Recovery"], fontsize=20)
 feature_name_space = feature_name.replace("_", " ")
-plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=14)
-plt.subplots_adjust(bottom=0.2, left=0.15)
-#plt.legend(loc="best")
-utils.adjust_plot(fig)
+plt.ylabel(f"Change in {feature_name_space} [%]", fontsize=20)
+#plt.ylabel(f"Change in peak deceleration [%]", fontsize=14)
+plt.subplots_adjust(bottom=0.2, left=0.17)
+plt.legend(loc="best",  prop={'size': 16})
+#utils.adjust_plot(fig)
+utils.despine()
 axes = plt.gca()
 axes.spines[['right', 'top']].set_visible(False)
 
 # Save figure on group basis
-plt.savefig(f"../../Plots/stats_{feature_name}_{med}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/stats_{feature_name}_{med}_poster.svg", format="svg", bbox_inches="tight", transparent=True)
 
 plt.show()

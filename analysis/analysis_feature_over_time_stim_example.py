@@ -54,12 +54,14 @@ feature_matrix = utils.norm_perc(feature_matrix)
 feature_matrix = utils.smooth_moving_average(feature_matrix, window_size=5, axis=1)
 
 # Plot feature over time
-plt.figure(figsize=(10, 3))
+plt.figure(figsize=(9, 5))
 plt.subplot(1, 2, 1)
 plt.plot(feature_matrix[1,:], color="black")
-plt.xlabel("Movement number", fontsize=14)
-plt.ylabel(f"Change in peak speed [%]", fontsize=14)
+plt.xlabel("Movement number", fontsize=20)
+plt.ylabel(f"Change in peak speed [%]", fontsize=20)
 #plt.title(f"Fast")
+plt.yticks([])
+plt.xticks(fontsize=16)
 plt.axvline(91, color="black")
 utils.despine()
 for i, s in enumerate(stim[1, :]):
@@ -68,7 +70,9 @@ for i, s in enumerate(stim[1, :]):
 
 plt.subplot(1, 2, 2)
 plt.plot(feature_matrix[0,:], color="black")
-plt.xlabel("Movement number", fontsize=14)
+plt.xlabel("Movement number", fontsize=20)
+plt.yticks([])
+plt.xticks(fontsize=16)
 #plt.ylabel(f"Change in peak speed [%]", fontsize=14)
 #plt.title(f"Slow")
 plt.axvline(91, color="black")
@@ -78,4 +82,7 @@ for i, s in enumerate(stim[0, :]):
         plt.axvline(i, color="red", alpha=0.5)
 
 plt.subplots_adjust(bottom=0.2, wspace=0.2)
+
+plt.savefig(f"../../Plots/trace_example.svg", format="svg", bbox_inches="tight", transparent=True)
+
 plt.show()

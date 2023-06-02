@@ -16,6 +16,7 @@ import seaborn as sb
 from scipy import stats
 import matplotlib
 from scipy.stats import pearsonr, spearmanr, percentileofscore
+from matplotlib import rc
 matplotlib.use('TkAgg')
 import warnings
 warnings.filterwarnings("ignore")
@@ -23,7 +24,7 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed"
 normalize = True
-datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 datasets_on = [3, 4, 5, 7, 9, 10, 12, 18, 21, 22, 23, 24, 25, 29]
 dataset = datasets_off
 #dataset = datasets_on
@@ -47,7 +48,7 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, a
 
 # Loop over stimulation and recovery blocks
 block_names = ["Stimulation", "Recovery"]
-plt.figure(figsize=(5, 4))
+fig = plt.figure(figsize=(6, 5))
 colors = ["#763c29", "#293c76"]
 for block in range(2):
 
@@ -89,18 +90,27 @@ for block in range(2):
     x = diff_effect
     y = diff_percentile_stim
     corr, p = spearmanr(x, y, nan_policy='omit')
-    sb.regplot(x=x, y=y, label=f"{block_names[block]}: corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", color=colors[block])
+    p = np.round(p, 3)
+    if p < 0.05:
+        sb.regplot(x=x, y=y, label=f"{block_names[block]}: r = {np.round(corr, 2)} "+"$\\bf{p=}$"+f"$\\bf{p}$", color=colors[block])
+    else:
+        sb.regplot(x=x, y=y, label=f"{block_names[block]}: r = {np.round(corr, 2)} " + f"p={p}",
+                   color=colors[block])
     #plt.title(f"corr = {np.round(corr, 2)}, p = {np.round(p, 3)}", fontweight='bold')
     feature_name_space = feature_name.replace("_", " ")
-    plt.xlabel(f"Difference of mean peak speed \n [Fast - Slow %]", fontsize=12)
-    plt.ylabel(f"Difference of peak speed of stimulated \n movements [Fast - Slow percentile]", fontsize=12)
+    plt.xlabel(f"Difference of mean peak \n speed [Fast - Slow %]", fontsize=20)
+    plt.ylabel(f"Difference of peak speed \n of stimulated movements \n[Fast - Slow percentile]", fontsize=20)
 
-plt.subplots_adjust(left=0.2, bottom=0.2, wspace=0.4, hspace=0.4)
-legend_properties = {'weight':'bold'}
-plt.legend(prop=legend_properties)
+plt.subplots_adjust(left=0.25, bottom=0.2)
 utils.despine()
+plt.yticks(fontsize=16)
+plt.xticks(fontsize=16)
+legend = plt.legend(loc='upper left', bbox_to_anchor=(-0.05, 1.1), prop={'size': 16}, handlelength=0, markerscale=0)
+legend.get_frame().set_alpha(0)
+for i, text in enumerate(legend.get_texts()):
+    text.set_color(colors[i])
 
 # Save the figure
-plt.savefig(f"../../Plots/predict_effect_{feature_name}.svg", format="svg", bbox_inches="tight")
+plt.savefig(f"../../Plots/predict_effect_{feature_name}_poster.svg", format="svg", bbox_inches="tight", transparent=True)
 
 plt.show()

@@ -23,7 +23,7 @@ matlab_files_root = "../../Data/behavioral_data/"
 
 # Set analysis parameters
 plot_individual = False
-feature_name = "peak_dec" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
+feature_name = "stim_time" # out of ["mean_speed","move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time", "fast", "slow"]
 
 feature_all = []
 slow_first_all = []
