@@ -66,7 +66,7 @@ plt.axvline(91, color="black")
 utils.despine()
 for i, s in enumerate(stim[1, :]):
     if s == 1:
-        plt.axvline(i, color="red", alpha=0.5)
+        plt.axvline(i, color="#E25558", alpha=0.4)
 
 plt.subplot(1, 2, 2)
 plt.plot(feature_matrix[0,:], color="black")
@@ -79,7 +79,7 @@ plt.axvline(91, color="black")
 utils.despine()
 for i, s in enumerate(stim[0, :]):
     if s == 1:
-        plt.axvline(i, color="red", alpha=0.5)
+        plt.axvline(i, color="#E25558", alpha=0.4)
 
 plt.subplots_adjust(bottom=0.2, wspace=0.2)
 

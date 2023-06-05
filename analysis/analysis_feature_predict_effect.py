@@ -49,8 +49,8 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m, threshold=3), axis=3, a
 # Loop over stimulation and recovery blocks
 block_names = ["Stimulation", "Recovery"]
 fig = plt.figure(figsize=(6, 5))
-colors = ["#763c29", "#293c76"]
-for block in range(2):
+colors = ["#763c29", "sandybrown"]
+for block in [1, 0]:
 
     # Select only the block of interest and delete the first 5 movements
     feature_matrix_tmp = feature_matrix[:, :, block, 5:]
@@ -107,6 +107,7 @@ plt.yticks(fontsize=16)
 plt.xticks(fontsize=16)
 legend = plt.legend(loc='upper left', bbox_to_anchor=(-0.05, 1.1), prop={'size': 16}, handlelength=0, markerscale=0)
 legend.get_frame().set_alpha(0)
+colors = ["sandybrown", "#763c29"]
 for i, text in enumerate(legend.get_texts()):
     text.set_color(colors[i])
 
