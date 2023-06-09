@@ -24,6 +24,12 @@ def norm_perc(array):
     array_norm_perc = ((array - mean_start) / mean_start) * 100
     return array_norm_perc
 
+def norm_perc_all(array):
+    """Normalize feature to stimulation block start and return as percentage"""
+    mean_all = np.nanmedian(array)
+    array_norm_perc = ((array - mean_all) / mean_all) * 100
+    return array_norm_perc
+
 
 def norm_perc_every_t_trials(array, t):
     """Normalize feature to mean of 5 values every t values and return as percentage"""

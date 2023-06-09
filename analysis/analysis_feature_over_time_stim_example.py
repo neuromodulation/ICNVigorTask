@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
-dataset = 27
+dataset = 6
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")

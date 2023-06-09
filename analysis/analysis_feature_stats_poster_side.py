@@ -31,9 +31,11 @@ else:
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
+trial_side = np.load(f"../../Data/trial_side.npy")
 
 # Select datasets of interest
 feature_matrix = feature_matrix[datasets, :, :, :]
+trial_side = trial_side[datasets, :, :, :]
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -42,25 +44,33 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_ma
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
+trial_side = np.reshape(trial_side, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
+trial_side = trial_side[:, :, 5:]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)
-#feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 91)
-
-#feature_matrix = np.nancumsum(np.diff(feature_matrix, axis=2), axis=2)
 
 # Compute significance for first/last half of stimulation/recovery
 fig = plt.figure(figsize=(5.6, 5.6))
 color_slow = "#00863b"
 color_fast = "#3b0086"
 bar_pos = [1, 2]
+sides = [0, 1]
 for i in range(1, 3):
 
+    feature_matrix_mean = np.zeros((n_datasets, 2))
+    # Loop over every patient
+    for d in range(n_datasets):
+        for cond in range(2):
+            f = feature_matrix[d, cond, int(91*(i-1)):int(91*i)]
+            t = trial_side[d, cond, int(91*(i-1)):int(91*i)]
+            feature_matrix_mean[d, cond] = np.nanmean(f[np.where(t==sides[cond])])
+
     # Median over all movements in that period
-    feature_matrix_mean = np.nanmean(feature_matrix[:, :, int(91*(i-1)):int(91*i)], axis=2)
+    #feature_matrix_mean = np.nanmean(feature_matrix[:, :, int(91*(i-1)):int(91*i)], axis=2)
 
     # Plot the mean bar
     if i == 1:
@@ -96,6 +106,6 @@ axes = plt.gca()
 axes.spines[['right', 'top']].set_visible(False)
 
 # Save figure on group basis
-plt.savefig(f"../../Plots/stats_{feature_name}_{med}_poster.svg", format="svg", bbox_inches="tight", transparent=True)
+#plt.savefig(f"../../Plots/stats_{feature_name}_{med}_poster.svg", format="svg", bbox_inches="tight", transparent=True)
 
 plt.show()

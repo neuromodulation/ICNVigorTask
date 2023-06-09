@@ -22,10 +22,10 @@ warnings.filterwarnings("ignore")
 # Set analysis parameters
 feature_name = "peak_speed" # out of ["peak_acc", "mean_speed", "move_dur", "peak_speed", "stim_time", "peak_speed_time", "move_onset_time", "move_offset_time"]
 block = "stim" # recovery or stim
-datasets_off = [0, 1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28]
+datasets_off = [1, 2, 6, 8, 11, 13, 14, 15, 16, 17, 19, 20, 26, 27, 28, 30]
 normalize = True
 datasets_on = [4, 5, 9, 10, 12, 18, 22, 23, 24, 25, 29]
-datasets_all = np.arange(30)
+datasets_all = np.arange(31)
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")

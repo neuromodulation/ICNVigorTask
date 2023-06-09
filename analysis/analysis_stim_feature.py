@@ -91,7 +91,7 @@ for dataset in datasets:
     feature_all_med.extend(feature_all_cond.flatten())
 
 # Plot as group violin plot
-plt.figure(figsize=(10, 5))
+plt.figure(figsize=(10, 4.5))
 y = []
 for i in range(len(feature_slow)):
     if i < len(feature_fast):
@@ -107,7 +107,11 @@ utils.despine()
 plt.ylabel(f"Percentile of stimulated \nmovements (Peak speed)", fontsize=20)
 plt.subplots_adjust(left=0.2)
 plt.yticks(fontsize=16)
-plt.xticks([])
+plt.xticks([-0.15, 0.15], ["Slow", "Fast"], fontsize=20)
+plt.gca().get_xticklabels()[0].set_color("#80c39d")
+plt.gca().get_xticklabels()[1].set_color("#9c80c2")
+plt.gca().get_xticklabels()[0].set_color( "#00863b")
+plt.gca().get_xticklabels()[1].set_color("#3b0086")
 
 # Save the figure
 plt.savefig(f"../../Plots/task_{feature_name}_violin.svg", format="svg", bbox_inches="tight", transparent=True)

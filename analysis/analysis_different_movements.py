@@ -31,9 +31,42 @@ else:
 
 # Load feature matrix
 feature_matrix = np.load(f"../../Data/{feature_name}.npy")
+trial_side = np.load(f"../../Data/trial_side.npy")
 
+# Dataset
+feature_matrix = feature_matrix[datasets, :, :, :]
+trial_side = trial_side[datasets, :, :, :]
+n_datasets, _,_, n_trials = feature_matrix.shape
+
+np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_matrix)
+
+# Reshape matrix such that blocks from one condition are concatenated
+feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
+trial_side = np.reshape(trial_side, (n_datasets, 2, n_trials*2))
+
+# Delete the first 5 movements
+feature_matrix = feature_matrix[:, 0, :]
+trial_side = trial_side[:, 0, :]
+
+# Normalize to average of first 5 movements
+#feature_matrix = utils.norm_perc(feature_matrix)
+
+# Compare peak speeds of both movement direction across all subjects
+right = feature_matrix[np.where(trial_side == 1)]
+left = feature_matrix[np.where(trial_side == 0)]
+
+# Plot
+x = np.concatenate((np.repeat("Right", len(right)), np.repeat("Left", len(left))))
+y = np.hstack((right, left))
+box = sb.boxplot(x=x, y=y, showfliers=False)
+add_stat_annotation(box, x=x, y=y,
+                    box_pairs=[("Right", "Left")],
+                    test='t-test_ind', text_format='simple', loc='inside', verbose=2)
+
+plt.show()
 # Select datasets of interest
 feature_matrix = feature_matrix[datasets, :, :, :]
+trial_side = trial_side[datasets, :, :, :]
 n_datasets, _,_, n_trials = feature_matrix.shape
 
 # Detect and fill outliers (e.g. when subject did not touch the screen)
@@ -42,15 +75,14 @@ np.apply_along_axis(lambda m: utils.fill_outliers_nan(m), axis=3, arr=feature_ma
 
 # Reshape matrix such that blocks from one condition are concatenated
 feature_matrix = np.reshape(feature_matrix, (n_datasets, 2, n_trials*2))
+trial_side = np.reshape(trial_side, (n_datasets, 2, n_trials*2))
 
 # Delete the first 5 movements
 feature_matrix = feature_matrix[:, :, 5:]
+trial_side = trial_side[:, :, 5:]
 
 # Normalize to average of first 5 movements
 feature_matrix = utils.norm_perc(feature_matrix)
-#feature_matrix = utils. norm_perc_every_t_trials(feature_matrix, 91)
-
-#feature_matrix = np.nancumsum(np.diff(feature_matrix, axis=2), axis=2)
 
 # Compute significance for first/last half of stimulation/recovery
 fig = plt.figure(figsize=(5.6, 5.6))
@@ -58,6 +90,12 @@ color_slow = "#00863b"
 color_fast = "#3b0086"
 bar_pos = [1, 2]
 for i in range(1, 3):
+
+    # Select different directions
+    tmp = feature_matrix[:, :, int(91*(i-1)):int(91*i)]
+    tmp_ts = trial_side[:, :, int(91*(i-1)):int(91*i)]
+    tmp = tmp[trial_side == 1]
+
 
     # Median over all movements in that period
     feature_matrix_mean = np.nanmean(feature_matrix[:, :, int(91*(i-1)):int(91*i)], axis=2)
